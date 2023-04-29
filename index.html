@@ -1,0 +1,141 @@
+<html>
+
+<head>
+    <title>INFO4310 - Spotify Global</title>
+    <meta charset="UTF-8">
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://d3js.org/topojson.v2.min.js"></script>
+</head>
+
+<body>
+    <div id="header">
+        <h1>Spotify Global</h1>
+        <p>Amy Huang (ach243), Jonna Chen (jc2627), Kate Liang (ksl67), Stephanie Zhang (swz8)</p>
+    </div>
+    <div id="instructions">
+
+    </div>
+    <div id="visualization">
+        <svg id="world-map" height="600" width="900"></svg>
+        <div>
+            <h3>Viral 50 Songs</h3>
+            <table id = "song-table">
+                <thead>
+                    <tr>
+                        <th>Rank</th>
+                        <th>Title</th>
+                        <th>Artist</th>
+                        <th>Streams</th>
+                    </tr>
+                </thead>
+                <tbody id = "tbody"></tbody>
+            </table>
+        </div>
+    </div>
+    
+    <script>
+        const drawWorldMap = async () => {
+            // Load data
+            const world = await d3.json("countries.geojson");
+            var viral50 = await d3.json('viral_50.json');
+            var viral50_csv = await d3.csv('viral_50_csv.csv');
+            console.log(viral50_csv);
+            
+            var selectedCountry;
+            var selectedCountryData;
+            var relevantSongs = viral50;
+
+            const getRelevantSongs = () =>{
+                let relevantSongs = [];
+                let country = selectedCountryData.properties.ADMIN;
+                console.log("country", country)
+                viral50_csv.forEach(song => {
+                    let region = song.region;
+                    if (region === country){
+                        relevantSongs.push(song)
+                    }
+                });
+                console.log("relevantSongs", relevantSongs);
+                return relevantSongs;
+            }
+
+            const defaultSongList = () =>{
+
+            }
+
+            const updateSongList = (relevantSongs) =>{
+                const table = document.getElementById('song-table');
+		        const tbody = document.getElementById('tbody');
+                
+		        for (let i = 0; i < relevantSongs.length; i++) {
+			        const row = tbody.insertRow(i);
+			        row.insertCell(0).textContent = relevantSongs[i].rank;
+			        row.insertCell(1).textContent = relevantSongs[i].title;
+			        row.insertCell(2).textContent = relevantSongs[i].artist;
+                    row.insertCell(3).textContent = relevantSongs[i].streams;
+		        }
+            }
+
+            // Draw map
+            const mapSvg = d3.select("#world-map");
+            const mapMargin = { top: 20, left: 20, right: 20, bottom: 20 };
+            const mapWidth = mapSvg.attr("width") - mapMargin.left - mapMargin.right;
+            const mapHeight = mapSvg.attr("height") - mapMargin.top - mapMargin.bottom;
+            const viewport = mapSvg.append("g");
+
+            const projection = d3.geoMercator().fitSize([mapWidth, mapHeight], world);
+            const path = d3.geoPath().projection(projection);
+            
+            let countryPaths = viewport.selectAll("countries").data(world.features)
+            .join("path")
+            .style("fill", "#CECEC9")
+            .attr("class", "countries")
+            .attr("d", path);
+
+            countryPaths.on("click", function (e, d) {
+                    if (selectedCountry == null) {
+                        console.log("initialize")
+                        selectedCountry = d3.select(this);
+                        selectedCountry.style("fill", "#ccd5ae");
+                        selectedCountryData = d;
+                        relevantSongs = getRelevantSongs()
+                        updateSongList(relevantSongs);
+                    } else if (selectedCountryData === d) {
+                        console.log("pressed on the same -- deselect");
+                        selectedCountry.style("fill", "#CECEC9");
+                        selectedCountry = null;
+                        defaultSongList();
+                    } else {
+                        console.log("pressed on diff country");
+                        selectedCountry.style("fill", "#EEE");
+                        selectedCountry = d3.select(this);
+                        console.log("new selected country", selectedCountry);
+                        selectedCountry.style("fill", "#ccd5ae");
+                        selectedCountryData = d;
+                        let relevantSongs = getRelevantSongs()
+                        console.log("relevantsongs", relevantSongs)
+                        updateSongList(relevantSongs);
+                    }
+            }).on("mouseover", function (e, d) {
+                d3.select(this).style("fill", "#1db954");
+            }).on("mouseout", function (e, d) {
+                d3.select(this).style("fill","CECEC9")
+            });
+            
+            viewport.append("path")
+            .datum(world.features)
+            .attr("class", "zips_outline")
+            .style("stroke", "white")
+            .attr("fill-opacity", 0.0)
+            .style("stroke-width", 1)
+            .attr("d", path);
+            
+            
+            
+        }
+        drawWorldMap();
+    </script>
+    
+</body>
+
+</html>
