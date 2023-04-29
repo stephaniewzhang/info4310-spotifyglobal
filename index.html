@@ -20,7 +20,7 @@
         <div>
             <h3 id = "table-name">Please Select a Country</h3>
             <table id = "song-table">
-                <thead>
+                <thead id = "thead">
                     <tr>
                         <th>Rank</th>
                         <th>Title</th>
@@ -34,11 +34,13 @@
     </div>
     
     <script>
+        document.getElementById("song-table").style.display = "none";
         const drawWorldMap = async () => {
             // Load data
             const world = await d3.json("countries.geojson");
             var viral50 = await d3.json('viral_50.json');
             var viral50_csv = await d3.csv('viral_50_csv.csv');
+
             console.log(viral50_csv);
             var hoverCountry;
             var selectedCountry;
@@ -63,6 +65,7 @@
                 console.log("ran default");
                 let country = selectedCountryData.properties.ADMIN;
                 document.getElementById("table-name").innerHTML = "Please Select a Country";
+                document.getElementById("song-table").style.display = "none";
 
             }
             
@@ -70,6 +73,7 @@
                 console.log("ran update");
                 let country = selectedCountryData.properties.ADMIN;
                 const table = document.getElementById('song-table');
+                const thead = document.getElementById('thead');
 		        const tbody = document.getElementById('tbody');
                 
 		        for (let i = 0; i < relevantSongs.length; i++) {
@@ -80,6 +84,7 @@
                     row.insertCell(3).textContent = relevantSongs[i].streams;
 		        }
                 document.getElementById("table-name").innerHTML = "Viral 50 Songs for " + country;
+                document.getElementById("song-table").style.display = "block";
             }
 
             // Draw map
