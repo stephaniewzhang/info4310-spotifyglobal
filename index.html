@@ -18,7 +18,7 @@
     <div id="visualization">
         <svg id="world-map" height="600" width="900"></svg>
         <div>
-            <h3>Viral 50 Songs</h3>
+            <h3 id = "table-name">Please Select a Country</h3>
             <table id = "song-table">
                 <thead>
                     <tr>
@@ -40,7 +40,7 @@
             var viral50 = await d3.json('viral_50.json');
             var viral50_csv = await d3.csv('viral_50_csv.csv');
             console.log(viral50_csv);
-            
+            var hoverCountry;
             var selectedCountry;
             var selectedCountryData;
             var relevantSongs = viral50;
@@ -60,10 +60,15 @@
             }
 
             const defaultSongList = () =>{
+                console.log("ran default");
+                let country = selectedCountryData.properties.ADMIN;
+                document.getElementById("table-name").innerHTML = "Please Select a Country";
 
             }
-
+            
             const updateSongList = (relevantSongs) =>{
+                console.log("ran update");
+                let country = selectedCountryData.properties.ADMIN;
                 const table = document.getElementById('song-table');
 		        const tbody = document.getElementById('tbody');
                 
@@ -74,6 +79,7 @@
 			        row.insertCell(2).textContent = relevantSongs[i].artist;
                     row.insertCell(3).textContent = relevantSongs[i].streams;
 		        }
+                document.getElementById("table-name").innerHTML = "Viral 50 Songs for " + country;
             }
 
             // Draw map
@@ -96,7 +102,7 @@
                     if (selectedCountry == null) {
                         console.log("initialize")
                         selectedCountry = d3.select(this);
-                        selectedCountry.style("fill", "#ccd5ae");
+                        selectedCountry.style("fill", "#1db954");
                         selectedCountryData = d;
                         relevantSongs = getRelevantSongs()
                         updateSongList(relevantSongs);
@@ -107,19 +113,29 @@
                         defaultSongList();
                     } else {
                         console.log("pressed on diff country");
-                        selectedCountry.style("fill", "#EEE");
+                        selectedCountry.style("fill", "#CECEC9");
                         selectedCountry = d3.select(this);
                         console.log("new selected country", selectedCountry);
-                        selectedCountry.style("fill", "#ccd5ae");
+                        selectedCountry.style("fill", "#1db954");
                         selectedCountryData = d;
                         let relevantSongs = getRelevantSongs()
                         console.log("relevantsongs", relevantSongs)
                         updateSongList(relevantSongs);
                     }
             }).on("mouseover", function (e, d) {
-                d3.select(this).style("fill", "#1db954");
+                hoverCountry = d3.select(this);
+                hoverCountry.style("fill", "#1db954");
+                hoverCountryData = d;
+                let hcountry = hoverCountryData.properties.ADMIN;
+                document.getElementById("table-name").innerHTML = "Do you want to compare music taste with "+ hcountry + "?";
             }).on("mouseout", function (e, d) {
-                d3.select(this).style("fill","CECEC9")
+                console.log(selectedCountry == null);
+                if (selectedCountry == null|| selectedCountryData.properties.ADMIN != d.properties.ADMIN){
+                    d3.select(this).style("fill","#CECEC9");
+                    document.getElementById("table-name").innerHTML = "Please Select a Country";
+                } else {
+                    d3.select(this).style("fill","#1db954");
+                }
             });
             
             viewport.append("path")
