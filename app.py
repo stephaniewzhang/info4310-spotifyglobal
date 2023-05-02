@@ -8,7 +8,7 @@ import urllib
 
 client_id = environ.get("CLIENT_ID")
 client_secret = environ.get("CLIENT_SECRET")
-redirect_uri = "http://localhost:5000/callback"
+redirect_uri = "https://info4310-spotifyglobal.onrender.com/callback"
 
 app = Flask(__name__, template_folder="static/")
 app.wsgi_app = WhiteNoise(app.wsgi_app, 
