@@ -32,8 +32,35 @@
             </table>
         </div>
     </div>
+
+    <div id="personalization">
+        <a href="/login">Login with Spotify</a> 
+        <div>
+            <button class="timeFilter" name="4 Weeks" type="submit" value="short_term">4 weeks</button>
+            <button class="timeFilter" name="6 Months" type="submit" value="medium_term">6 months</button>
+            <button class="timeFilter" name="All-Time" type="submit" value="long_term">All-Time</button>
+        </div>
+        <ol id="topTracks"></ol>
+    </div>
     
     <script>
+        var topTracks = []
+
+        '{% for track in data %}'
+        topTracks.push({"id": '{{track.id}}', "name": '{{track.name}}', "url": '{{track.url}}'})
+        '{% endfor %}'
+
+        var topTracksList = d3.select("#topTracks");
+
+        for(let i = 0; i < topTracks.length; i++){
+            if(topTracks[i]["url"].substring(0, 5) != "https"){
+                break
+            }
+            topTracksList.append("li").text(topTracks[i]["name"])
+        }
+
+        d3.selectAll(".timeFilter").on("click", fetchUserTopSongs);
+
         document.getElementById("song-table").style.display = "none";
         const drawWorldMap = async () => {
             // Load data
@@ -154,6 +181,42 @@
             
             
         }
+
+        async function fetchUserTopSongs() {
+            term = this.value
+            token = '{{access_token}}'
+
+            let args = new URLSearchParams({
+                time_range: term,
+                limit: 50,
+                offset: 0
+            });
+
+            const result = await fetch("https://api.spotify.com/v1/me/top/tracks?" + args, {
+                method: "GET", headers: { Authorization: `Bearer ${token}` }
+            }).then(response => 
+                response.json().then(data => ({
+                    data: data,
+                    status: response.status
+                })
+            ).then(res => {
+                if(res.status != 200){
+                    return
+                }
+                tracks = res.data["items"]
+                topTracks = []
+                for(let i = 0; i < tracks.length; i++){
+                    topTracks.push({"id": tracks[i]["id"], "name": tracks[i]["name"], "url": tracks[i]["url"]})
+                }
+            }));
+
+            document.getElementById("topTracks").innerHTML = "";
+            var topTracksList = d3.select("#topTracks");
+            for(let i = 0; i < topTracks.length; i++){
+                topTracksList.append("li").text(topTracks[i]["name"])
+            }
+        }
+
         drawWorldMap();
     </script>
     
