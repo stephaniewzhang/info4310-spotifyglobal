@@ -8,7 +8,7 @@ import urllib
 
 client_id = environ.get("CLIENT_ID")
 client_secret = environ.get("CLIENT_SECRET")
-redirect_uri = "https://info4310-spotifyglobal.onrender.com/callback"
+redirect_uri = environ.get("REDIRECT_URI")
 
 app = Flask(__name__, template_folder="static/")
 app.wsgi_app = WhiteNoise(app.wsgi_app, 
@@ -83,7 +83,7 @@ def callback():
             response = requests.get(url, headers=headers)
             if response.status_code == 200:
                 tracks = response.json()["items"]
-                data = [{"id": track["id"], "name": track["name"], "url": track["external_urls"]["spotify"]} for track in tracks]
+                data = [{"id": track["id"], "name": track["name"], "url": track["external_urls"]["spotify"], "popularity": track["popularity"]} for track in tracks]
     return render_template("index.htm", data=data, access_token=access_token)
     
 if __name__ == "__main__":
