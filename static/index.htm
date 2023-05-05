@@ -6,6 +6,27 @@
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <script src="https://d3js.org/topojson.v2.min.js"></script>
     <style>
+        @font-face {
+            font-family: spotifyHeader;
+            src: url("Gotham-Bold.otf");
+        }
+        @font-face {
+            font-family: spotifyNormal;
+            src: url("Gotham-Light.otf");
+        }
+        #header{
+            font-family: spotifyHeader;
+            color: #535353;
+        }
+        #instructions{
+            font-family: spotifyNormal;
+            color: #535353;
+        }
+        #personalization{
+            font-family: spotifyNormal;
+            color: #535353;
+        }
+        
         
         #visualization{
             display: flex;
@@ -17,6 +38,14 @@
         #song-table{
             width: 700;
         }
+        #gmap{
+            width:1600;
+            height:2000;
+        }
+        body {
+            background-color: #ebebdd;
+        }
+
     </style>
 </head>
 
@@ -29,7 +58,7 @@
 
     </div>
     <div id="visualization">
-        <svg id="world-map" height = 500 width = 900></svg>
+        <svg id="world-map" height = 400 width = 700></svg>
         <div id = "instructions">
             <h3 id = "table-name">Please Select a Country</h3>
             <table id = "song-table">
@@ -165,14 +194,14 @@
             const mapMargin = { top: 20, left: 20, right: 20, bottom: 20 };
             const mapWidth = mapSvg.attr("width") - mapMargin.left - mapMargin.right;
             const mapHeight = mapSvg.attr("height") - mapMargin.top - mapMargin.bottom;
-            const viewport = mapSvg.append("g");
+            const viewport = mapSvg.append("g").attr("id", "gmap");
 
             const projection = d3.geoMercator().fitSize([mapWidth, mapHeight], world);
             const path = d3.geoPath().projection(projection);
             
             let countryPaths = viewport.selectAll("countries").data(world.features)
             .join("path")
-            .style("fill", "#CECEC9")
+            .style("fill", "#535353")
             .attr("class", "countries")
             .attr("d", path);
 
@@ -186,12 +215,12 @@
                         updateSongList(relevantSongs);
                     } else if (selectedCountryData === d) {
                         console.log("pressed on the same -- deselect");
-                        selectedCountry.style("fill", "#CECEC9");
+                        selectedCountry.style("fill", "#535353");
                         selectedCountry = null;
                         defaultSongList();
                     } else {
                         console.log("pressed on diff country");
-                        selectedCountry.style("fill", "#CECEC9");
+                        selectedCountry.style("fill", "#535353");
                         selectedCountry = d3.select(this);
                         console.log("new selected country", selectedCountry);
                         selectedCountry.style("fill", "#1db954");
@@ -209,7 +238,7 @@
             }).on("mouseout", function (e, d) {
                 // console.log(selectedCountry == null);
                 if (selectedCountry == null|| selectedCountryData.properties.ADMIN != d.properties.ADMIN){
-                    d3.select(this).style("fill","#CECEC9");
+                    d3.select(this).style("fill","#535353");
                     document.getElementById("table-name").innerHTML = "Please Select a Country";
                 } else {
                     d3.select(this).style("fill","#1db954");
