@@ -237,6 +237,9 @@
                         let relevantSongs = getRelevantSongs()
                         updateSongList(relevantSongs);
                     }
+                    // TODO -- change to be real data
+                    drawRadarPlot();
+
             }).on("mouseover", function (e, d) {
                 hoverCountry = d3.select(this);
                 hoverCountry.style("fill", "#1db954");
