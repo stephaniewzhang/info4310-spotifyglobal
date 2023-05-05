@@ -96,21 +96,21 @@
         var name = ""
         var url = ""
 
-        try{
+        try {
             id =  JSON.parse('{{track["id"]|tojson|safe}}')
         } catch(e){
             id = '{{track["id"]|tojson|safe}}'
             console.log(e)
         }
 
-        try{
+        try {
             name = JSON.parse('{{track["name"]|tojson|safe}}')
         } catch(e){
             name = '{{track["name"]|tojson|safe}}'
             console.log(e)
         }
 
-        try{
+        try {
             url = JSON.parse('{{track["url"]|tojson|safe}}')
         } catch(e){
             url = '{{track["url"]|tojson|safe}}'
@@ -122,7 +122,7 @@
 
         var topTracksList = d3.select("#topTracks");
 
-        for(let i = 0; i < topTracks.length; i++){
+        for (let i = 0; i < topTracks.length; i++) {
             if(topTracks[i]["url"].substring(0, 5) != "https"){
                 break
             }
@@ -155,7 +155,7 @@
             var selectedCountryData;
             var relevantSongs = viral50;
 
-            const getRelevantSongs = () =>{
+            const getRelevantSongs = () => {
                 let relevantSongs = [];
                 let country = selectedCountryData.properties.ADMIN;
                 console.log("country", country)
@@ -177,7 +177,7 @@
 
             }
             
-            const updateSongList = (relevantSongs) =>{
+            const updateSongList = (relevantSongs) => {
                 if (relevantSongs.length === 0){
                     console.log("empty")
                     relevantSongs = [];
@@ -267,7 +267,7 @@
             // these features across the user's top 50 songs or something like that 
             let data = []
             let features = ["popularity", "danceability", "energy", "duration", "explicit"]
-            for (var i = 0; i < 3; i++){
+            for (var i = 0; i < 1; i++){
                 var point = {}
                 // each feature will be a random number from 1-9
                 features.forEach(f => point[f] = 1 + Math.random() * 8);
