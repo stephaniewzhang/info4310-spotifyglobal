@@ -31,6 +31,7 @@
         
         #visualization{
             display: flex;
+            flex-direction:row;
             text-align:left;
         }
         tr{
@@ -61,8 +62,8 @@
 
     </div>
     <div id="visualization">
-        <svg id="world-map" height = 400 width = 700></svg>
         <div id = "instructions">
+            <svg id="world-map" height = 400 width = 700></svg>
             <h3 id = "table-name">Please Select a Country</h3>
             <table id = "song-table">
                 <thead id = "thead">
@@ -75,7 +76,9 @@
                 <tbody id = "tbody"></tbody>
             </table>
         </div>
-        <svg id="radar-plot" height="600" width="900"></svg>
+        <div id = "spider">
+            <svg id="radar-plot" height="600" width="900"></svg>
+        </div>
     </div>
 
     <div id="personalization">
