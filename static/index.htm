@@ -8,11 +8,11 @@
     <style>
         @font-face {
             font-family: spotifyHeader;
-            src: url("Gotham-Bold.otf");
+            src: url("fonts/Gotham-Bold.otf");
         }
         @font-face {
             font-family: spotifyNormal;
-            src: url("Gotham-Light.otf");
+            src: url("fonts/Gotham-Light.otf");
         }
         #header{
             font-family: spotifyHeader;
@@ -142,7 +142,9 @@
         document.getElementById("song-table").style.display = "none";
         const drawWorldMap = async () => {
             // Load data
-            const world = await d3.json("countries.geojson");
+            let world = await d3.json("countries.geojson");
+            // Remove Greenland and Antarctica
+            world.features = world.features.filter(d => d.properties.ISO_A3 != "GRL" && d.properties.ISO_A3 != "ATA");
             var viral50 = await d3.json('viral_50.json');
             var viral50_csv = await d3.csv('viral_50_csv.csv');
 
