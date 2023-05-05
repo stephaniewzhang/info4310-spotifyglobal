@@ -44,8 +44,70 @@
             </table>
         </div>
     </div>
+
+    <div id="personalization">
+        <a href="/login">Login with Spotify</a> 
+        <div>
+            <button class="timeFilter" name="4 Weeks" type="submit" value="short_term">4 weeks</button>
+            <button class="timeFilter" name="6 Months" type="submit" value="medium_term">6 months</button>
+            <button class="timeFilter" name="All-Time" type="submit" value="long_term">All-Time</button>
+        </div>
+        <ol id="topTracks"></ol>
+    </div>
     
     <script>
+        var topTracks = []
+        var userAudioFeatures = []
+
+        '{% for track in data %}'
+        var id = ""
+        var name = ""
+        var url = ""
+
+        try{
+            id =  JSON.parse('{{track["id"]|tojson|safe}}')
+        } catch(e){
+            id = '{{track["id"]|tojson|safe}}'
+            console.log(e)
+        }
+
+        try{
+            name = JSON.parse('{{track["name"]|tojson|safe}}')
+        } catch(e){
+            name = '{{track["name"]|tojson|safe}}'
+            console.log(e)
+        }
+
+        try{
+            url = JSON.parse('{{track["url"]|tojson|safe}}')
+        } catch(e){
+            url = '{{track["url"]|tojson|safe}}'
+            console.log(e)
+        }
+
+        topTracks.push({"id": id, "name": name, "url": url})
+        '{% endfor %}'
+
+        var topTracksList = d3.select("#topTracks");
+
+        for(let i = 0; i < topTracks.length; i++){
+            if(topTracks[i]["url"].substring(0, 5) != "https"){
+                break
+            }
+            (async() => {
+                const res = Promise.resolve(fetchTopTracksAudio(topTracks))
+                res.then(value => {
+                    if(value != null){
+                        userAudioFeatures = value;
+                    }
+                })
+            })();
+            topTracksList.append("li").text(topTracks[i]["name"])
+
+        }
+
+        d3.selectAll(".timeFilter").on("click", fetchUserTopSongs);
+
         document.getElementById("song-table").style.display = "none";
         const drawWorldMap = async () => {
             // Load data
@@ -145,7 +207,7 @@
                 let hcountry = hoverCountryData.properties.ADMIN;
                 document.getElementById("table-name").innerHTML = "Do you want to compare music taste with "+ hcountry + "?";
             }).on("mouseout", function (e, d) {
-                console.log(selectedCountry == null);
+                // console.log(selectedCountry == null);
                 if (selectedCountry == null|| selectedCountryData.properties.ADMIN != d.properties.ADMIN){
                     d3.select(this).style("fill","#CECEC9");
                     document.getElementById("table-name").innerHTML = "Please Select a Country";
@@ -165,6 +227,88 @@
             
             
         }
+
+        async function fetchUserTopSongs() {
+            term = this.value
+            token = '{{access_token}}'
+
+            let args = new URLSearchParams({
+                time_range: term,
+                limit: 50,
+                offset: 0
+            });
+
+            const result = await fetch("https://api.spotify.com/v1/me/top/tracks?" + args, {
+                method: "GET", headers: { Authorization: `Bearer ${token}` }
+            }).then(response => 
+                response.json().then(data => ({
+                    data: data,
+                    status: response.status
+                })
+            ).then(res => {
+                if(res.status != 200){
+                    return
+                }
+                tracks = res.data["items"]
+                topTracks = []
+                for(let i = 0; i < tracks.length; i++){
+                    topTracks.push({"id": tracks[i]["id"], "name": tracks[i]["name"], "url": tracks[i]["external_urls"]["spotify"], "popularity": tracks[i]["popularity"]})
+                }
+            }));
+
+            document.getElementById("topTracks").innerHTML = "";
+            var topTracksList = d3.select("#topTracks");
+            for(let i = 0; i < topTracks.length; i++){
+                topTracksList.append("li").text(topTracks[i]["name"])
+            }
+
+            const res =  await Promise.resolve(fetchTopTracksAudio(topTracks))
+            userAudioFeatures = res
+        }
+
+
+        async function fetchTopTracksAudio(topTracks){
+            var ids = ""
+            var token = '{{access_token}}'
+
+            for(let i = 0; i < topTracks.length; i++){
+                ids += topTracks[i]["id"] + ","
+            }
+
+            var args = new URLSearchParams({
+                ids: ids,
+            });
+
+            var audioFeatures = []
+
+            const result = await fetch("https://api.spotify.com/v1/audio-features?" + args, {
+                method: "GET", headers: { Authorization: `Bearer ${token}` }
+            }).then(response => 
+                response.json().then(data => ({
+                    data: data,
+                    status: response.status
+                })
+            ).then(res => {
+                if(res.status != 200){
+                    return
+                }
+
+                tracks = res.data["audio_features"]
+                for(let i = 0; i < tracks.length; i++){
+                    var obj = {}
+                    var track_id = topTracks[i]["id"]
+                    obj[track_id] = {
+                        "danceability": tracks[i]["danceability"], 
+                        "energy": tracks[i]["energy"], 
+                        "popularity": topTracks[i]["popularity"]
+                    }
+                    audioFeatures.push(obj)
+                }
+            }));
+
+            return audioFeatures
+        }
+
         drawWorldMap();
     </script>
     
