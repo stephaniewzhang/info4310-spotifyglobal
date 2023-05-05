@@ -53,6 +53,8 @@
     <div id="header">
         <h1>Spotify Global</h1>
         <p>Amy Huang (ach243), Jonna Chen (jc2627), Kate Liang (ksl67), Stephanie Zhang (swz8)</p>
+        <p>Every year around December, we heavily await Spotify Wrapped's new features. Spotify will report every year how many countries you've listened to and we wanted to expand on that more. </p>
+        <p>Here with Spotify Global, you can compare the personality of your songs with those around the world!</p>
     </div>
     <div id="instructions">
 
@@ -176,7 +178,10 @@
             }
             
             const updateSongList = (relevantSongs) =>{
-                console.log("ran update");
+                if (relevantSongs.length === 0){
+                    console.log("empty")
+                    relevantSongs = [];
+                }
                 let country = selectedCountryData.properties.ADMIN;
                 const table = document.getElementById('song-table');
                 const thead = document.getElementById('thead');
@@ -229,7 +234,6 @@
                         selectedCountry.style("fill", "#1db954");
                         selectedCountryData = d;
                         let relevantSongs = getRelevantSongs()
-                        console.log("relevantsongs", relevantSongs)
                         updateSongList(relevantSongs);
                     }
             }).on("mouseover", function (e, d) {
