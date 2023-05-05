@@ -5,6 +5,19 @@
     <meta charset="UTF-8">
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <script src="https://d3js.org/topojson.v2.min.js"></script>
+    <style>
+        
+        #visualization{
+            display: flex;
+            text-align:left;
+        }
+        tr{
+            word-break: break-all;
+        }
+        #song-table{
+            width: 700;
+        }
+    </style>
 </head>
 
 <body>
@@ -16,8 +29,8 @@
 
     </div>
     <div id="visualization">
-        <svg id="world-map" height="600" width="900"></svg>
-        <div>
+        <svg id="world-map" height = 500 width = 900></svg>
+        <div id = "instructions">
             <h3 id = "table-name">Please Select a Country</h3>
             <table id = "song-table">
                 <thead id = "thead">
@@ -25,7 +38,6 @@
                         <th>Rank</th>
                         <th>Title</th>
                         <th>Artist</th>
-                        <th>Streams</th>
                     </tr>
                 </thead>
                 <tbody id = "tbody"></tbody>
@@ -81,7 +93,6 @@
 			        row.insertCell(0).textContent = relevantSongs[i].rank;
 			        row.insertCell(1).textContent = relevantSongs[i].title;
 			        row.insertCell(2).textContent = relevantSongs[i].artist;
-                    row.insertCell(3).textContent = relevantSongs[i].streams;
 		        }
                 document.getElementById("table-name").innerHTML = "Viral 50 Songs for " + country;
                 document.getElementById("song-table").style.display = "block";
