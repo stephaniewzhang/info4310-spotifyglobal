@@ -29,6 +29,7 @@
         }
         #visualization {
             display: flex;
+            flex-direction:row;
             text-align:left;
             flex-direction: column;
         }
@@ -60,8 +61,8 @@
 
     </div>
     <div id="visualization">
-        <svg id="world-map" height = 400 width = 700></svg>
         <div id = "instructions">
+            <svg id="world-map" height = 400 width = 700></svg>
             <h3 id = "table-name">Please Select a Country</h3>
             <table id = "song-table">
                 <thead id = "thead">
@@ -74,7 +75,9 @@
                 <tbody id = "tbody"></tbody>
             </table>
         </div>
-        <svg id="radar-plot" height="600" width="900"></svg>
+        <div id = "spider">
+            <svg id="radar-plot" height="600" width="900"></svg>
+        </div>
     </div>
 
     <div id="personalization">
@@ -99,21 +102,21 @@
         try {
             id =  JSON.parse('{{track["id"]|tojson|safe}}')
         } catch(e){
-            id = '{{track["id"]|tojson|safe}}'
+            id = '{{track["id"]}}'
             console.log(e)
         }
 
         try {
             name = JSON.parse('{{track["name"]|tojson|safe}}')
         } catch(e){
-            name = '{{track["name"]|tojson|safe}}'
+            name = '{{track["name"]}}'
             console.log(e)
         }
 
         try {
             url = JSON.parse('{{track["url"]|tojson|safe}}')
         } catch(e){
-            url = '{{track["url"]|tojson|safe}}'
+            url = '{{track["url"]}}'
             console.log(e)
         }
 
