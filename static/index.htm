@@ -76,7 +76,7 @@
             </table>
         </div>
         <div id = "spider">
-            <svg id="radar-plot" height="600" width="900"></svg>
+            <svg id="radar-plot" height="900" width="900"></svg>
         </div>
     </div>
 
@@ -115,18 +115,26 @@
 
         try {
             url = JSON.parse('{{track["url"]|tojson|safe}}')
-        } catch(e){
+        } catch(e) {
             url = '{{track["url"]}}'
             console.log(e)
         }
 
-        topTracks.push({"id": id, "name": name, "url": url})
+        try {
+            popularity = JSON.parse('{{track["popularity"]|tojson|safe}}')
+        } catch(e) {
+            popularity = '{{track["popularity"]}}'
+            console.log(e)
+        }
+
+        topTracks.push({"id": id, "name": name, "url": url, "popularity": popularity})
         '{% endfor %}'
+        console.log(topTracks)
 
         var topTracksList = d3.select("#topTracks");
 
         for (let i = 0; i < topTracks.length; i++) {
-            if(topTracks[i]["url"].substring(0, 5) != "https"){
+            if (topTracks[i]["url"].substring(0, 5) != "https") {
                 break
             }
             (async() => {
@@ -134,6 +142,7 @@
                 res.then(value => {
                     if(value != null){
                         userAudioFeatures = value;
+                        drawRadarPlot();
                     }
                 })
             })();
@@ -271,21 +280,23 @@
             // generate dummy data -> todo -> make api call to get these features
             // todo: currently there are 3 layers, one for each data point. for the final result, need to average 
             // these features across the user's top 50 songs or something like that 
-            let data = []
-            let features = ["popularity", "danceability", "energy", "duration", "explicit"]
-            for (var i = 0; i < 1; i++){
-                var point = {}
-                // each feature will be a random number from 1-9
-                features.forEach(f => point[f] = 1 + Math.random() * 8);
-                data.push(point);
-            }
-            console.log(data);
+
+            console.log("drawRadarPlot userAudioFeatures", userAudioFeatures)
+
+            const avgUserAudioFeatures = {}
+            userAudioFeaturesArray = userAudioFeatures.map(d => Object.values(d)[0])
+            const features = Object.keys(userAudioFeaturesArray[0]);
+            features.forEach(k => {
+                avgUserAudioFeatures[k] = userAudioFeaturesArray.reduce((total, next) => total + next[k], 0) / userAudioFeaturesArray.length;
+                avgUserAudioFeatures[k] = Math.round(avgUserAudioFeatures[k] * 100) / 100
+            })
+            console.log("avguseraudio", avgUserAudioFeatures)
 
             let radarPlot = d3.select("#radar-plot");
             let radarWidth = radarPlot.attr("width")
             let radarHeight = radarPlot.attr("height")
-            let radialScale = d3.scaleLinear().domain([0, 10]).range([0, 250]) // todo: real domain is 0 - 1
-            let ticks = [2, 4, 6, 8, 10] // todo: change to be increments of 0.2 -> 1.0
+            let radialScale = d3.scaleLinear().domain([0, 1]).range([0, 250]) 
+            let ticks = [0.2, 0.4, 0.6, 0.8, 1] 
 
             radarPlot.selectAll("circle").data(ticks)
                      .join("circle")
@@ -313,8 +324,8 @@
                 return {
                     "name": f,
                     "angle": angle,
-                    "line_coord": angleToCoordinate(angle, 10),
-                    "label_coord": angleToCoordinate(angle, 10.5)
+                    "line_coord": angleToCoordinate(angle, 1),
+                    "label_coord": angleToCoordinate(angle, 1.05)
                 };
             });
 
@@ -327,17 +338,17 @@
                      .attr("y2", d => d.line_coord.y)
                      .attr("stroke","black")
 
-            // drawing the axis labels
+            // // drawing the axis labels
             radarPlot.selectAll(".axisLabel").data(featureData)
                      .join("text")
                      .attr("class", "axisLabel")
                      .attr("x", d => d.label_coord.x)
-                     .attr("y", d => d.label_coord.y)
+                     .attr("y", (d, i) => i == 0 ? (d.label_coord.y - 10) : (i == 3 ? d.label_coord.y + 10 : d.label_coord.y))
+                     .attr("text-anchor", (d, i) => (i % 3 == 0) ? "middle" : (i < 3 ? "end" : "start"))
                      .text(d => d.name)
 
             // plotting the data
             let line = d3.line().x(d => d.x).y(d => d.y);
-            let colors = ["darkorange", "gray", "navy"];
 
             const getPathCoordinates = (dataPoint) => {
                 let coordinates = [];
@@ -348,13 +359,13 @@
                 }
                 return coordinates
             } 
-            radarPlot.selectAll("path").data(data)
+            radarPlot.selectAll("path").data([avgUserAudioFeatures])
                      .join("path")
-                     .datum(d => { console.log(d); console.log(getPathCoordinates(d)); return getPathCoordinates(d) })
+                     .datum(d => { return getPathCoordinates(d) })
                      .attr("d", line)
                      .attr("stroke-width", 3)
-                     .attr("stroke", (_, i) => colors[i])
-                     .attr("fill", (_, i) => colors[i])
+                     .attr("stroke", "salmon")
+                     .attr("fill", "salmon")
                      .attr("stroke-opacity", 1)
                      .attr("opacity", 0.5)
         }
@@ -395,6 +406,7 @@
 
             const res =  await Promise.resolve(fetchTopTracksAudio(topTracks))
             userAudioFeatures = res
+            drawRadarPlot();
         }
 
 
@@ -402,7 +414,7 @@
             var ids = ""
             var token = '{{access_token}}'
 
-            for(let i = 0; i < topTracks.length; i++){
+            for (let i = 0; i < topTracks.length; i++){
                 ids += topTracks[i]["id"] + ","
             }
 
@@ -411,6 +423,7 @@
             });
 
             var audioFeatures = []
+            console.log("token", `${token}`)
 
             const result = await fetch("https://api.spotify.com/v1/audio-features?" + args, {
                 method: "GET", headers: { Authorization: `Bearer ${token}` }
@@ -431,7 +444,10 @@
                     obj[track_id] = {
                         "danceability": tracks[i]["danceability"], 
                         "energy": tracks[i]["energy"], 
-                        "popularity": topTracks[i]["popularity"]
+                        "popularity": topTracks[i]["popularity"] / 100, 
+                        "acousticness": tracks[i]["acousticness"],
+                        "instrumentalness": tracks[i]["instrumentalness"],
+                        "valence": tracks[i]["valence"]
                     }
                     audioFeatures.push(obj)
                 }
@@ -441,7 +457,6 @@
         }
 
         drawWorldMap();
-        drawRadarPlot();
     </script>
     
 </body>
