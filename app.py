@@ -21,7 +21,7 @@ app.wsgi_app = WhiteNoise(app.wsgi_app,
 @app.route('/login') 
 def login():
     state = random.choices(string.ascii_lowercase)
-    scope = 'user-read-private user-read-email user-top-read'
+    scope = 'user-top-read'
 
     params_dict = {
         "response_type": "code", 
