@@ -85,6 +85,6 @@ def callback():
                 tracks = response.json()["items"]
                 data = [{"id": track["id"], "name": track["name"], "url": track["external_urls"]["spotify"], "popularity": track["popularity"]} for track in tracks]
     return render_template("index.htm", data=data, access_token=access_token)
-    
+
 if __name__ == "__main__":
     app.run(threaded=True, port=5000)

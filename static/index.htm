@@ -76,7 +76,8 @@
             </table>
         </div>
         <div id = "spider">
-            <svg id="radar-plot" height="900" width="900"></svg>
+            <svg id="user-radar-plot" height="900" width="900"></svg>
+            <svg id="country-radar-plot" height="900" width="900"></svg>
         </div>
     </div>
 
@@ -158,10 +159,11 @@
             let world = await d3.json("countries.geojson");
             // Remove Greenland and Antarctica
             world.features = world.features.filter(d => d.properties.ISO_A3 != "GRL" && d.properties.ISO_A3 != "ATA");
-            var viral50 = await d3.json('viral_50.json');
+            var viral50 = await d3.json('viral_50_with_features.json');
             var viral50_csv = await d3.csv('viral_50_csv.csv');
 
-            console.log(viral50_csv);
+            console.log("csv", viral50_csv);
+            console.log("json", viral50)
             var hoverCountry;
             var selectedCountry;
             var selectedCountryData;
@@ -276,13 +278,11 @@
             .attr("d", path);
         }
 
-        const drawRadarPlot = async () => {
-            // generate dummy data -> todo -> make api call to get these features
-            // todo: currently there are 3 layers, one for each data point. for the final result, need to average 
-            // these features across the user's top 50 songs or something like that 
+        const drawUserRadarPlot = async () => {
 
-            console.log("drawRadarPlot userAudioFeatures", userAudioFeatures)
+        }
 
+        const drawCountryRadarPlot = async () => {
             const avgUserAudioFeatures = {}
             userAudioFeaturesArray = userAudioFeatures.map(d => Object.values(d)[0])
             const features = Object.keys(userAudioFeaturesArray[0]);
@@ -290,9 +290,12 @@
                 avgUserAudioFeatures[k] = userAudioFeaturesArray.reduce((total, next) => total + next[k], 0) / userAudioFeaturesArray.length;
                 avgUserAudioFeatures[k] = Math.round(avgUserAudioFeatures[k] * 100) / 100
             })
-            console.log("avguseraudio", avgUserAudioFeatures)
 
-            let radarPlot = d3.select("#radar-plot");
+            drawRadarPlot(avgUserAudioFeatures, "#user-radar-plot")
+        }
+
+        const drawRadarPlot = async (audioFeatures, plotId) => {
+            let radarPlot = d3.select(plotId);
             let radarWidth = radarPlot.attr("width")
             let radarHeight = radarPlot.attr("height")
             let radialScale = d3.scaleLinear().domain([0, 1]).range([0, 250]) 
@@ -359,7 +362,7 @@
                 }
                 return coordinates
             } 
-            radarPlot.selectAll("path").data([avgUserAudioFeatures])
+            radarPlot.selectAll("path").data([audioFeatures])
                      .join("path")
                      .datum(d => { return getPathCoordinates(d) })
                      .attr("d", line)
