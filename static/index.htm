@@ -19,10 +19,6 @@
             color: #535353;
             width: 80%;
         }
-        #instructions {
-            font-family: spotifyNormal;
-            color: #535353;
-        }
         #personalization {
             font-family: spotifyNormal;
             color: #535353;
@@ -33,11 +29,19 @@
             text-align:left;
             flex-direction: column;
         }
+        #track-container {
+            font-family: spotifyNormal;
+            color: #535353;
+        }
         tr {
             word-break: break-all;
         }
         #song-table {
             width: 700;
+        }
+        tbody {
+            font-family: spotifyHeader;
+            color: #535353;
         }
         #gmap {
             width:1600;
@@ -46,7 +50,7 @@
         body {
             background-color: #ebebdd;
         }
-        #spider {
+        #spider-plots {
             display: flex;
             flex-direction: row;
         }
@@ -64,19 +68,30 @@
         <p>Every year around December, we heavily await Spotify Wrapped's new features. Spotify will report every year how many countries you've listened to and we wanted to expand on that more. </p>
         <p>Here with Spotify Global, you can compare the personality of your songs with those around the world!</p>
     </div>
-    <div id="instructions">
-
+    <div id="personalization">
+        <a href="/login">Login with Spotify</a> 
+        <div>
+            <button class="timeFilter" name="4 Weeks" type="submit" value="short_term">4 weeks</button>
+            <button class="timeFilter" name="6 Months" type="submit" value="medium_term">6 months</button>
+            <button class="timeFilter" name="All-Time" type="submit" value="long_term">All-Time</button>
+        </div>
     </div>
     <div id="visualization">
-        <div id = "instructions">
-            <svg id="world-map" height = 400 width = 700></svg>
-            <div id = "spider">
+        <h3 id="table-name">Please Select a Country</h3>
+        <svg id="world-map" height = 400 width = 700></svg>
+        <div id ="spider-container">
+            <button class="compare-spiders" onclick="compareRadarPlots()">Compare</button>
+            <div id="spider-plots">
                 <p>User</p>
                 <svg id="user-radar-plot" height="500" width="500"></svg>
                 <p>Country: [to be written]</p>
                 <svg id="country-radar-plot" height="500" width="500"></svg>
+                <p>Compare</p>
+                <svg id="compare-radar-plot" height="500" width="500"></svg>
             </div>
-            <h3 id = "table-name">Please Select a Country</h3>
+        </div>
+        <div id="track-container">
+            <ol id="topTracks"></ol>
             <table id = "song-table">
                 <thead id = "thead">
                     <tr>
@@ -89,20 +104,11 @@
             </table>
         </div>
     </div>
-
-    <div id="personalization">
-        <a href="/login">Login with Spotify</a> 
-        <div>
-            <button class="timeFilter" name="4 Weeks" type="submit" value="short_term">4 weeks</button>
-            <button class="timeFilter" name="6 Months" type="submit" value="medium_term">6 months</button>
-            <button class="timeFilter" name="All-Time" type="submit" value="long_term">All-Time</button>
-        </div>
-        <ol id="topTracks"></ol>
-    </div>
     
     <script>
         var topTracks = []
         var userAudioFeatures = []
+        var relevantSongs
 
         '{% for track in data %}'
         var id = ""
@@ -184,7 +190,7 @@
             var hoverCountry;
             var selectedCountry;
             var selectedCountryData;
-            var relevantSongs = viral50;
+            relevantSongs = viral50;
 
             const getRelevantSongs = () => {
                 let country = selectedCountryData.properties.ADMIN;
@@ -297,15 +303,15 @@
                 avgUserAudioFeatures[k] = userAudioFeaturesArray.reduce((total, next) => total + next[k], 0) / userAudioFeaturesArray.length;
                 avgUserAudioFeatures[k] = Math.round(avgUserAudioFeatures[k] * 100) / 100
             })
-            drawRadarPlot(avgUserAudioFeatures, "#user-radar-plot", features)
+            drawRadarPlot([avgUserAudioFeatures], "#user-radar-plot", features)
         }
 
         const drawUserPlotEmpty = async () => {
-            drawRadarPlot({}, "#user-radar-plot", [])
+            drawRadarPlot([], "#user-radar-plot", [])
         }
 
         const drawCountryRadarPlotEmpty = async () => {
-            drawRadarPlot({}, "#country-radar-plot", [])
+            drawRadarPlot([], "#country-radar-plot", [])
         }
 
         const drawCountryRadarPlot = async (relevantSongs) => {
@@ -321,7 +327,7 @@
                 avgCountryAudioFeatures[k] = Math.round(avgCountryAudioFeatures[k] * 100) / 100
             })
 
-            drawRadarPlot(avgCountryAudioFeatures, "#country-radar-plot", features)
+            drawRadarPlot([avgCountryAudioFeatures], "#country-radar-plot", features)
         }
 
         const drawRadarPlot = async (audioFeatures, plotId, features) => {
@@ -329,7 +335,8 @@
             let radarWidth = radarPlot.attr("width")
             let radarHeight = radarPlot.attr("height")
             let radialScale = d3.scaleLinear().domain([0, 1]).range([0, 160]) 
-            let ticks = [0.2, 0.4, 0.6, 0.8, 1] 
+            let ticks = [0.2, 0.4, 0.6, 0.8, 1]
+            let plotColors = ["salmon",  "#6495ED"]
 
             radarPlot.selectAll("circle").data(ticks)
                      .join("circle")
@@ -392,15 +399,41 @@
                 }
                 return coordinates
             } 
-            radarPlot.selectAll("path").data([audioFeatures])
+
+            console.log(plotColors[1])
+            radarPlot.selectAll("path").data(audioFeatures)
                      .join("path")
                      .datum(d => { return getPathCoordinates(d) })
                      .attr("d", line)
                      .attr("stroke-width", 3)
-                     .attr("stroke", "salmon")
-                     .attr("fill", "salmon")
+                     .attr("stroke", (d, i) => plotId == "#compare-radar-plot" ? plotColors[i] : plotId == "#user-radar-plot" ? plotColors[0] : plotColors[1])
+                     .attr("fill",(d, i) => plotId == "#compare-radar-plot" ? plotColors[i] : plotId == "#user-radar-plot" ? plotColors[0] : plotColors[1])
                      .attr("stroke-opacity", 1)
                      .attr("opacity", 0.5)
+                     .transition()
+        }
+
+        const compareRadarPlots = () => {
+            const avgUserAudioFeatures = {}
+            userAudioFeaturesArray = userAudioFeatures.map(d => Object.values(d)[0])
+            const features = Object.keys(userAudioFeaturesArray[0]);
+            features.forEach(k => {
+                avgUserAudioFeatures[k] = userAudioFeaturesArray.reduce((total, next) => total + next[k], 0) / userAudioFeaturesArray.length;
+                avgUserAudioFeatures[k] = Math.round(avgUserAudioFeatures[k] * 100) / 100
+            })
+
+            let songFeaturesArray = []
+            const avgCountryAudioFeatures = {}
+            relevantSongs.forEach(song => {
+                const {date_objects, chart, date, artist, rank, region, streams, title, trend, url, ...features} = song
+                songFeaturesArray.push(features)
+            })
+            features.forEach(k => {
+                avgCountryAudioFeatures[k] = songFeaturesArray.reduce((total, next) => total + next[k], 0) / songFeaturesArray.length;
+                avgCountryAudioFeatures[k] = Math.round(avgCountryAudioFeatures[k] * 100) / 100
+            })
+
+            drawRadarPlot([avgUserAudioFeatures, avgCountryAudioFeatures], "#compare-radar-plot", features)
         }
 
         async function fetchUserTopSongs() {
