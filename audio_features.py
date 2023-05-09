@@ -44,7 +44,7 @@ for key in data:
 
     rp = requests.get(BASE_URL + "tracks/" + track_id, headers=headers)
     print(rp.headers)
-    # rp_json = rp.json()
+    rp_json = rp.json()
     data[key]["popularity"] = rp_json["popularity"] / 100
     # data[key]["popularity"] = 0.5 # todo: re-run script after retry time
     print(data[key])
