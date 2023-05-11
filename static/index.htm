@@ -57,7 +57,15 @@
         .interaction-disabled {
             pointer-events: none;
         }
-
+        .container #resetButton {
+            position: relative;
+            top: 40%;
+            left: 0%;
+            transform: translate(-50%, -50%);
+            -ms-transform: translate(-50%, -50%);
+            
+        }
+        
     </style>
 </head>
 
@@ -78,7 +86,10 @@
     </div>
     <div id="visualization">
         <h3 id="table-name">Please Select a Country</h3>
-        <svg id="world-map" height = 400 width = 700></svg>
+        <div class = "container">
+            <svg id="world-map" height = 610 width = 975></svg>
+            <button id = "resetButton" name = "reset" type = "submit">Reset</button>
+        </div>
         <div id ="spider-container">
             <button class="compare-spiders" onclick="compareRadarPlots()">Compare</button>
             <div id="spider-plots">
@@ -109,46 +120,46 @@
         var topTracks = []
         var userAudioFeatures = []
         var relevantSongs
-
+        
         '{% for track in data %}'
         var id = ""
         var name = ""
         var url = ""
-
+        
         try {
             id =  JSON.parse('{{track["id"]|tojson|safe}}')
         } catch(e){
             id = '{{track["id"]}}'
             console.log(e)
         }
-
+        
         try {
             name = JSON.parse('{{track["name"]|tojson|safe}}')
         } catch(e){
             name = '{{track["name"]}}'
             console.log(e)
         }
-
+        
         try {
             url = JSON.parse('{{track["url"]|tojson|safe}}')
         } catch(e) {
             url = '{{track["url"]}}'
             console.log(e)
         }
-
+        
         try {
             popularity = JSON.parse('{{track["popularity"]|tojson|safe}}')
         } catch(e) {
             popularity = '{{track["popularity"]}}'
             console.log(e)
         }
-
+        
         topTracks.push({"id": id, "name": name, "url": url, "popularity": popularity})
         '{% endfor %}'
         console.log(topTracks)
-
+        
         var topTracksList = d3.select("#topTracks");
-
+        
         for (let i = 0; i < topTracks.length; i++) {
             if (topTracks[i]["url"].substring(0, 5) != "https") {
                 break
@@ -163,11 +174,11 @@
                 })
             })();
             topTracksList.append("li").text(topTracks[i]["name"])
-
+            
         }
-
+        
         d3.selectAll(".timeFilter").on("click", fetchUserTopSongs);
-
+        
         document.getElementById("song-table").style.display = "none";
         const drawWorldMap = async () => {
             // Load data
@@ -186,17 +197,17 @@
                 }
             })
             const validCountries = Object.keys(countrySongMap);
-
+            
             var hoverCountry;
             var selectedCountry;
             var selectedCountryData;
             relevantSongs = viral50;
-
+            
             const getRelevantSongs = () => {
                 let country = selectedCountryData.properties.ADMIN;
                 return countrySongMap[country]
             }
-
+            
             const defaultSongList = () =>{
                 console.log("ran default");
                 let country = selectedCountryData.properties.ADMIN;
@@ -212,31 +223,66 @@
                 let country = selectedCountryData.properties.ADMIN;
                 const table = document.getElementById('song-table');
                 const thead = document.getElementById('thead');
-		        const tbody = document.getElementById('tbody');
+                const tbody = document.getElementById('tbody');
                 
-		        for (let i = 0; i < relevantSongs.length; i++) {
-			        const row = tbody.insertRow(i);
-			        row.insertCell(0).textContent = relevantSongs[i].rank;
-			        row.insertCell(1).textContent = relevantSongs[i].title;
-			        row.insertCell(2).textContent = relevantSongs[i].artist;
-		        }
+                for (let i = 0; i < relevantSongs.length; i++) {
+                    const row = tbody.insertRow(i);
+                    row.insertCell(0).textContent = relevantSongs[i].rank;
+                    row.insertCell(1).textContent = relevantSongs[i].title;
+                    row.insertCell(2).textContent = relevantSongs[i].artist;
+                }
                 document.getElementById("table-name").innerHTML = "Viral 50 Songs for " + country;
                 document.getElementById("song-table").style.display = "block";
             }
-
+            
+            const zoom = d3.zoom().scaleExtent([1, 8]).on("zoom", zoomed);
+            function zoomed(event) {
+                const {transform} = event;
+                viewport.attr("transform", transform);
+                viewport.attr("stroke-width", 1 / transform.k);
+            }
+            
+            var rb = document.getElementById("resetButton");
+            function reset() {
+                mapSvg.transition().duration(750).call(
+                zoom.transform,
+                d3.zoomIdentity,
+                d3.zoomTransform(mapSvg.node()).invert([mapWidth / 2, mapHeight / 2])
+                );
+            }
+            rb.addEventListener("click", reset);
+            
+            
+            
+            function clicked(event, d) {
+                const [[x0, y0], [x1, y1]] = path.bounds(d);
+                event.stopPropagation();
+                mapSvg.transition().duration(750).call(
+                    zoom.transform,
+                    d3.zoomIdentity
+                        .translate(mapWidth / 2, mapHeight / 2)
+                        .scale(Math.min(8, 0.9 / Math.max((x1 - x0) / mapWidth, (y1 - y0) / mapHeight)))
+                        .translate(-(x0 + x1) / 2, -(y0 + y1) / 2),
+                        d3.pointer(event, mapSvg.node())
+                );
+            }
+            
+            
             // Draw map
             const mapSvg = d3.select("#world-map");
             const mapMargin = { top: 20, left: 20, right: 20, bottom: 20 };
             const mapWidth = mapSvg.attr("width") - mapMargin.left - mapMargin.right;
             const mapHeight = mapSvg.attr("height") - mapMargin.top - mapMargin.bottom;
             const viewport = mapSvg.append("g").attr("id", "gmap");
-
+            
             const projection = d3.geoMercator().fitSize([mapWidth, mapHeight], world);
             const path = d3.geoPath().projection(projection);
-
+            
             const invalidCountryColor = "#dad7cd"
             const validCountryColor = "#a3b18a"
             const selectedCountryColor = "#6b9080"
+            
+            mapSvg.call(zoom);
             
             let countryPaths = viewport.selectAll("countries").data(world.features)
             .join("path")
@@ -244,32 +290,33 @@
             .attr("class", "countries")
             .attr("class", d => validCountries.includes(d.properties.ADMIN) ? "interaction" : "interaction-disabled")
             .attr("d", path);
-
+            
             countryPaths.on("click", function (e, d) {
-                    if (selectedCountry == null) {
-                        console.log("initialize")
-                        selectedCountry = d3.select(this);
-                        selectedCountry.style("fill", selectedCountryColor);
-                        selectedCountryData = d;
-                        relevantSongs = getRelevantSongs()
-                        updateSongList(relevantSongs);
-                    } else if (selectedCountryData === d) {
-                        console.log("pressed on the same -- deselect");
-                        selectedCountry.style("fill", validCountries.includes(d.properties.ADMIN) ? validCountryColor : invalidCountryColor);
-                        selectedCountry = null;
-                        defaultSongList();
-                    } else {
-                        console.log("pressed on diff country");
-                        selectedCountry.style("fill", validCountries.includes(d.properties.ADMIN) ? validCountryColor : invalidCountryColor);
-                        selectedCountry = d3.select(this);
-                        console.log("new selected country", selectedCountry);
-                        selectedCountry.style("fill", selectedCountryColor);
-                        selectedCountryData = d;
-                        relevantSongs = getRelevantSongs()
-                        updateSongList(relevantSongs);
-                    }
-                    drawUserRadarPlot();
-                    drawCountryRadarPlot(relevantSongs);
+                if (selectedCountry == null) {
+                    console.log("initialize")
+                    selectedCountry = d3.select(this);
+                    selectedCountry.style("fill", selectedCountryColor);
+                    selectedCountryData = d;
+                    relevantSongs = getRelevantSongs()
+                    updateSongList(relevantSongs);
+                } else if (selectedCountryData === d) {
+                    console.log("pressed on the same -- deselect");
+                    selectedCountry.style("fill", validCountries.includes(d.properties.ADMIN) ? validCountryColor : invalidCountryColor);
+                    selectedCountry = null;
+                    defaultSongList();
+                } else {
+                    console.log("pressed on diff country");
+                    selectedCountry.style("fill", validCountries.includes(d.properties.ADMIN) ? validCountryColor : invalidCountryColor);
+                    selectedCountry = d3.select(this);
+                    console.log("new selected country", selectedCountry);
+                    selectedCountry.style("fill", selectedCountryColor);
+                    selectedCountryData = d;
+                    relevantSongs = getRelevantSongs()
+                    updateSongList(relevantSongs);
+                }
+                clicked(e,d);
+                drawUserRadarPlot();
+                drawCountryRadarPlot(relevantSongs);
             }).on("mouseover", function (e, d) {
                 hoverCountry = d3.select(this);
                 hoverCountryData = d;
@@ -294,7 +341,7 @@
             .style("stroke-width", 1)
             .attr("d", path);
         }
-
+        
         const drawUserRadarPlot = async () => {
             const avgUserAudioFeatures = {}
             userAudioFeaturesArray = userAudioFeatures.map(d => Object.values(d)[0])
@@ -305,15 +352,15 @@
             })
             drawRadarPlot([avgUserAudioFeatures], "#user-radar-plot", features)
         }
-
+        
         const drawUserPlotEmpty = async () => {
             drawRadarPlot([], "#user-radar-plot", [])
         }
-
+        
         const drawCountryRadarPlotEmpty = async () => {
             drawRadarPlot([], "#country-radar-plot", [])
         }
-
+        
         const drawCountryRadarPlot = async (relevantSongs) => {
             let songFeaturesArray = []
             const avgCountryAudioFeatures = {}
@@ -326,10 +373,10 @@
                 avgCountryAudioFeatures[k] = songFeaturesArray.reduce((total, next) => total + next[k], 0) / songFeaturesArray.length;
                 avgCountryAudioFeatures[k] = Math.round(avgCountryAudioFeatures[k] * 100) / 100
             })
-
+            
             drawRadarPlot([avgCountryAudioFeatures], "#country-radar-plot", features)
         }
-
+        
         const drawRadarPlot = async (audioFeatures, plotId, features) => {
             let radarPlot = d3.select(plotId);
             let radarWidth = radarPlot.attr("width")
@@ -337,28 +384,28 @@
             let radialScale = d3.scaleLinear().domain([0, 1]).range([0, 160]) 
             let ticks = [0.2, 0.4, 0.6, 0.8, 1]
             let plotColors = ["salmon",  "#6495ED"]
-
+            
             radarPlot.selectAll("circle").data(ticks)
-                     .join("circle")
-                     .attr("cx", radarWidth / 2)
-                     .attr("cy", radarHeight / 2)
-                     .attr("fill", "none")
-                     .attr("stroke", "#ccc")
-                     .attr("r", d => radialScale(d))
-
+            .join("circle")
+            .attr("cx", radarWidth / 2)
+            .attr("cy", radarHeight / 2)
+            .attr("fill", "none")
+            .attr("stroke", "#ccc")
+            .attr("r", d => radialScale(d))
+            
             radarPlot.selectAll(".tickLabel").data(ticks)
-                     .join("text")
-                     .attr("class", "ticklabel")
-                     .attr("x", radarWidth / 2 + 5)
-                     .attr("y", d => radarHeight / 2 - radialScale(d))
-                     .text(d => d.toString())
-
+            .join("text")
+            .attr("class", "ticklabel")
+            .attr("x", radarWidth / 2 + 5)
+            .attr("y", d => radarHeight / 2 - radialScale(d))
+            .text(d => d.toString())
+            
             const angleToCoordinate = (angle, value) => {
                 let x = Math.cos(angle) * radialScale(value);
                 let y = Math.sin(angle) * radialScale(value);
                 return {"x": radarWidth / 2 + x, "y": radarHeight / 2 - y};
             }
-
+            
             let featureData = features.map((f, i) => {
                 let angle = (Math.PI / 2) + (2 * Math.PI * i / features.length)
                 return {
@@ -368,28 +415,28 @@
                     "label_coord": angleToCoordinate(angle, 1.05)
                 };
             });
-
+            
             // drawing the axis lines
             radarPlot.selectAll("line").data(featureData)
-                     .join("line")
-                     .attr("x1", radarWidth / 2)
-                     .attr("y1", radarHeight / 2)
-                     .attr("x2", d => d.line_coord.x)
-                     .attr("y2", d => d.line_coord.y)
-                     .attr("stroke","black")
-
+            .join("line")
+            .attr("x1", radarWidth / 2)
+            .attr("y1", radarHeight / 2)
+            .attr("x2", d => d.line_coord.x)
+            .attr("y2", d => d.line_coord.y)
+            .attr("stroke","black")
+            
             // // drawing the axis labels
             radarPlot.selectAll(".axisLabel").data(featureData)
-                     .join("text")
-                     .attr("class", "axisLabel")
-                     .attr("x", d => d.label_coord.x)
-                     .attr("y", (d, i) => i == 0 ? (d.label_coord.y - 10) : (i == 3 ? d.label_coord.y + 10 : d.label_coord.y))
-                     .attr("text-anchor", (d, i) => (i % 3 == 0) ? "middle" : (i < 3 ? "end" : "start"))
-                     .text(d => d.name)
-
+            .join("text")
+            .attr("class", "axisLabel")
+            .attr("x", d => d.label_coord.x)
+            .attr("y", (d, i) => i == 0 ? (d.label_coord.y - 10) : (i == 3 ? d.label_coord.y + 10 : d.label_coord.y))
+            .attr("text-anchor", (d, i) => (i % 3 == 0) ? "middle" : (i < 3 ? "end" : "start"))
+            .text(d => d.name)
+            
             // plotting the data
             let line = d3.line().x(d => d.x).y(d => d.y);
-
+            
             const getPathCoordinates = (dataPoint) => {
                 let coordinates = [];
                 for (var i = 0; i < features.length; i++) {
@@ -399,20 +446,20 @@
                 }
                 return coordinates
             } 
-
+            
             console.log(plotColors[1])
             radarPlot.selectAll("path").data(audioFeatures)
-                     .join("path")
-                     .datum(d => { return getPathCoordinates(d) })
-                     .attr("d", line)
-                     .attr("stroke-width", 3)
-                     .attr("stroke", (d, i) => plotId == "#compare-radar-plot" ? plotColors[i] : plotId == "#user-radar-plot" ? plotColors[0] : plotColors[1])
-                     .attr("fill",(d, i) => plotId == "#compare-radar-plot" ? plotColors[i] : plotId == "#user-radar-plot" ? plotColors[0] : plotColors[1])
-                     .attr("stroke-opacity", 1)
-                     .attr("opacity", 0.5)
-                     .transition()
+            .join("path")
+            .datum(d => { return getPathCoordinates(d) })
+            .attr("d", line)
+            .attr("stroke-width", 3)
+            .attr("stroke", (d, i) => plotId == "#compare-radar-plot" ? plotColors[i] : plotId == "#user-radar-plot" ? plotColors[0] : plotColors[1])
+            .attr("fill",(d, i) => plotId == "#compare-radar-plot" ? plotColors[i] : plotId == "#user-radar-plot" ? plotColors[0] : plotColors[1])
+            .attr("stroke-opacity", 1)
+            .attr("opacity", 0.5)
+            .transition()
         }
-
+        
         const compareRadarPlots = () => {
             const avgUserAudioFeatures = {}
             userAudioFeaturesArray = userAudioFeatures.map(d => Object.values(d)[0])
@@ -421,7 +468,7 @@
                 avgUserAudioFeatures[k] = userAudioFeaturesArray.reduce((total, next) => total + next[k], 0) / userAudioFeaturesArray.length;
                 avgUserAudioFeatures[k] = Math.round(avgUserAudioFeatures[k] * 100) / 100
             })
-
+            
             let songFeaturesArray = []
             const avgCountryAudioFeatures = {}
             relevantSongs.forEach(song => {
@@ -432,27 +479,27 @@
                 avgCountryAudioFeatures[k] = songFeaturesArray.reduce((total, next) => total + next[k], 0) / songFeaturesArray.length;
                 avgCountryAudioFeatures[k] = Math.round(avgCountryAudioFeatures[k] * 100) / 100
             })
-
+            
             drawRadarPlot([avgUserAudioFeatures, avgCountryAudioFeatures], "#compare-radar-plot", features)
         }
-
+        
         async function fetchUserTopSongs() {
             term = this.value
             token = '{{access_token}}'
-
+            
             let args = new URLSearchParams({
                 time_range: term,
                 limit: 50,
                 offset: 0
             });
-
+            
             const result = await fetch("https://api.spotify.com/v1/me/top/tracks?" + args, {
                 method: "GET", headers: { Authorization: `Bearer ${token}` }
             }).then(response => 
-                response.json().then(data => ({
-                    data: data,
-                    status: response.status
-                })
+            response.json().then(data => ({
+                data: data,
+                status: response.status
+            })
             ).then(res => {
                 if(res.status != 200){
                     return
@@ -463,46 +510,46 @@
                     topTracks.push({"id": tracks[i]["id"], "name": tracks[i]["name"], "url": tracks[i]["external_urls"]["spotify"], "popularity": tracks[i]["popularity"]})
                 }
             }));
-
+            
             document.getElementById("topTracks").innerHTML = "";
             var topTracksList = d3.select("#topTracks");
             for(let i = 0; i < topTracks.length; i++){
                 topTracksList.append("li").text(topTracks[i]["name"])
             }
-
+            
             const res =  await Promise.resolve(fetchTopTracksAudio(topTracks))
             userAudioFeatures = res
             drawUserRadarPlot();
         }
-
-
+        
+        
         async function fetchTopTracksAudio(topTracks){
             var ids = ""
             var token = '{{access_token}}'
-
+            
             for (let i = 0; i < topTracks.length; i++){
                 ids += topTracks[i]["id"] + ","
             }
-
+            
             var args = new URLSearchParams({
                 ids: ids,
             });
-
+            
             var audioFeatures = []
             console.log("token", `${token}`)
-
+            
             const result = await fetch("https://api.spotify.com/v1/audio-features?" + args, {
                 method: "GET", headers: { Authorization: `Bearer ${token}` }
             }).then(response => 
-                response.json().then(data => ({
-                    data: data,
-                    status: response.status
-                })
+            response.json().then(data => ({
+                data: data,
+                status: response.status
+            })
             ).then(res => {
                 if(res.status != 200){
                     return
                 }
-
+                
                 tracks = res.data["audio_features"]
                 for(let i = 0; i < tracks.length; i++){
                     var obj = {}
@@ -518,10 +565,10 @@
                     audioFeatures.push(obj)
                 }
             }));
-
+            
             return audioFeatures
         }
-
+        
         drawWorldMap();
         drawUserPlotEmpty();
         drawCountryRadarPlotEmpty();
