@@ -21,7 +21,7 @@ app.wsgi_app = WhiteNoise(app.wsgi_app,
 @app.route('/login') 
 def login():
     state = random.choices(string.ascii_lowercase)
-    scope = 'user-top-read'
+    scope = 'user-read-private user-read-email user-top-read'
 
     params_dict = {
         "response_type": "code", 
@@ -83,7 +83,19 @@ def callback():
             response = requests.get(url, headers=headers)
             if response.status_code == 200:
                 tracks = response.json()["items"]
-                data = [{"id": track["id"], "name": track["name"], "url": track["external_urls"]["spotify"], "popularity": track["popularity"]} for track in tracks]
+                track_data = [{"id": track["id"], "name": track["name"], "url": track["external_urls"]["spotify"], "popularity": track["popularity"]} for track in tracks]
+
+            user_url = "https://api.spotify.com/v1/me"
+            user_response = requests.get(user_url, headers=headers)
+            if user_response.status_code == 200: 
+                user_data = user_response.json()["display_name"]
+
+            data = {
+                "track_data": track_data,
+                "user_data": user_data
+            }
+            print("user data", user_data)
+
     return render_template("index.htm", data=data, access_token=access_token)
 
 if __name__ == "__main__":

@@ -50,7 +50,7 @@
         body {
             background-color: #ebebdd;
         }
-        #spider-plots {
+        #individual-radar-plots {
             display: flex;
             flex-direction: row;
         }
@@ -76,18 +76,22 @@
             <button class="timeFilter" name="All-Time" type="submit" value="long_term">All-Time</button>
         </div>
     </div>
+    <div id="hello-container"></div>
     <div id="visualization">
         <h3 id="table-name">Please Select a Country</h3>
         <svg id="world-map" height = 400 width = 700></svg>
-        <div id ="spider-container">
-            <button class="compare-spiders" onclick="compareRadarPlots()">Compare</button>
-            <div id="spider-plots">
-                <p>User</p>
-                <svg id="user-radar-plot" height="500" width="500"></svg>
-                <p>Country: [to be written]</p>
-                <svg id="country-radar-plot" height="500" width="500"></svg>
-                <p>Compare</p>
-                <svg id="compare-radar-plot" height="500" width="500"></svg>
+        <div id ="radar-container">
+            <div id="radar-plots">
+                <div id="individual-radar-plots">
+                    <p>You</p>
+                    <svg id="user-radar-plot" height="500" width="500"></svg>
+                    <p id="country-label">Select a country</p>
+                    <svg id="country-radar-plot" height="500" width="500"></svg>
+                </div>
+                <div>
+                    <svg id="compare-radar-plot" height="500" width="500"></svg>
+                    <svg id="compare-text" height="300" width="500"></svg>
+                </div>
             </div>
         </div>
         <div id="track-container">
@@ -109,8 +113,20 @@
         var topTracks = []
         var userAudioFeatures = []
         var relevantSongs
+        var hasUserRadarPlot = false 
+        var hasCountryRadarPlot = false
+        const radarFeatures =  ["danceability", "energy", "popularity", "acousticness", "instrumentalness", "valence"]
+        const featureTextMap = {
+            "danceability": "danceable", 
+            "energy": "energetic", 
+            "popularity": "popular", 
+            "acousticness": "acoustic", 
+            "instrumentalness": "instrumental", 
+            "valence": "happy"
+        }
+        var userName = ""
 
-        '{% for track in data %}'
+        '{% for track in data["track_data"] %}'
         var id = ""
         var name = ""
         var url = ""
@@ -145,6 +161,14 @@
 
         topTracks.push({"id": id, "name": name, "url": url, "popularity": popularity})
         '{% endfor %}'
+
+        try {
+            userName = JSON.parse('{{data["user_data"]|tojson|safe}}')
+        } catch (e) {
+            userName = '{{data["user_data"]}}'
+            console.log(e)
+        }
+        console.log(userName)
         console.log(topTracks)
 
         var topTracksList = d3.select("#topTracks");
@@ -159,6 +183,8 @@
                     if(value != null){
                         userAudioFeatures = value;
                         drawUserRadarPlot();
+                        checkCompareRadarPlot();
+                        setUserView();
                     }
                 })
             })();
@@ -269,7 +295,8 @@
                         updateSongList(relevantSongs);
                     }
                     drawUserRadarPlot();
-                    drawCountryRadarPlot(relevantSongs);
+                    drawCountryRadarPlot(relevantSongs, selectedCountryData.properties.ADMIN);
+                    checkCompareRadarPlot();
             }).on("mouseover", function (e, d) {
                 hoverCountry = d3.select(this);
                 hoverCountryData = d;
@@ -295,17 +322,6 @@
             .attr("d", path);
         }
 
-        const drawUserRadarPlot = async () => {
-            const avgUserAudioFeatures = {}
-            userAudioFeaturesArray = userAudioFeatures.map(d => Object.values(d)[0])
-            const features = Object.keys(userAudioFeaturesArray[0]);
-            features.forEach(k => {
-                avgUserAudioFeatures[k] = userAudioFeaturesArray.reduce((total, next) => total + next[k], 0) / userAudioFeaturesArray.length;
-                avgUserAudioFeatures[k] = Math.round(avgUserAudioFeatures[k] * 100) / 100
-            })
-            drawRadarPlot([avgUserAudioFeatures], "#user-radar-plot", features)
-        }
-
         const drawUserPlotEmpty = async () => {
             drawRadarPlot([], "#user-radar-plot", [])
         }
@@ -314,23 +330,112 @@
             drawRadarPlot([], "#country-radar-plot", [])
         }
 
-        const drawCountryRadarPlot = async (relevantSongs) => {
+        const drawUserRadarPlot = async () => {
+            hasUserRadarPlot = true;
+            const avgUserAudioFeatures = {}
+            userAudioFeaturesArray = userAudioFeatures.map(d => Object.values(d)[0])
+            radarFeatures.forEach(k => {
+                avgUserAudioFeatures[k] = userAudioFeaturesArray.reduce((total, next) => total + next[k], 0) / userAudioFeaturesArray.length;
+                avgUserAudioFeatures[k] = Math.round(avgUserAudioFeatures[k] * 100) / 100
+            })
+            drawRadarPlot([avgUserAudioFeatures], "#user-radar-plot")
+        }
+
+        const drawCountryRadarPlot = async (relevantSongs, selectedCountry) => {
+            document.getElementById("country-label").innerText = `${selectedCountry}`
+
+            hasCountryRadarPlot = true;
             let songFeaturesArray = []
             const avgCountryAudioFeatures = {}
             relevantSongs.forEach(song => {
                 const {date_objects, chart, date, artist, rank, region, streams, title, trend, url, ...features} = song
                 songFeaturesArray.push(features)
             })
-            const features = Object.keys(songFeaturesArray[0])
-            features.forEach(k => {
+            radarFeatures.forEach(k => {
                 avgCountryAudioFeatures[k] = songFeaturesArray.reduce((total, next) => total + next[k], 0) / songFeaturesArray.length;
                 avgCountryAudioFeatures[k] = Math.round(avgCountryAudioFeatures[k] * 100) / 100
             })
 
-            drawRadarPlot([avgCountryAudioFeatures], "#country-radar-plot", features)
+            drawRadarPlot([avgCountryAudioFeatures], "#country-radar-plot")
         }
 
-        const drawRadarPlot = async (audioFeatures, plotId, features) => {
+
+        const drawCompareRadarPlot = () => {
+            const avgUserAudioFeatures = {}
+            userAudioFeaturesArray = userAudioFeatures.map(d => Object.values(d)[0])
+            radarFeatures.forEach(k => {
+                avgUserAudioFeatures[k] = userAudioFeaturesArray.reduce((total, next) => total + next[k], 0) / userAudioFeaturesArray.length;
+                avgUserAudioFeatures[k] = Math.round(avgUserAudioFeatures[k] * 100) / 100
+            })
+
+            let songFeaturesArray = []
+            const avgCountryAudioFeatures = {}
+            relevantSongs.forEach(song => {
+                const {date_objects, chart, date, artist, rank, region, streams, title, trend, url, ...features} = song
+                songFeaturesArray.push(features)
+            })
+            radarFeatures.forEach(k => {
+                avgCountryAudioFeatures[k] = songFeaturesArray.reduce((total, next) => total + next[k], 0) / songFeaturesArray.length;
+                avgCountryAudioFeatures[k] = Math.round(avgCountryAudioFeatures[k] * 100) / 100
+            })
+
+            drawRadarPlot([avgUserAudioFeatures, avgCountryAudioFeatures], "#compare-radar-plot")
+            return [avgUserAudioFeatures, avgCountryAudioFeatures]
+        }
+
+        const drawComparePlotText = (userFeatureAvg, countryFeatureAvg) => {
+            let textData = [[{ text: "Your music taste is:", color: 'black' }]]
+            radarFeatures.forEach(f => {
+                var average = (userFeatureAvg[f] + countryFeatureAvg[f]) / 2
+                var difference = (userFeatureAvg[f] - countryFeatureAvg[f]) / average
+                difference = (Math.round(difference * 100 * 10) / 10)
+                if (difference > 0) {
+                    textData.push([
+                        { text: `${Math.abs(difference)}% `, color: 'salmon' }, 
+                        { text: `more ${featureTextMap[f]}`, color: 'black' }
+                    ])
+                } else if (difference == 0) {
+                    textData.push([
+                        { text: `Equally `, color: 'salmon' }, 
+                        { text: `as ${featureTextMap[f]}`, color: 'black' }
+                    ])
+                } else {
+                    textData.push([
+                        { text: `${Math.abs(difference)}% `, color: 'salmon' }, 
+                        { text: `less ${featureTextMap[f]}`, color: 'black' }
+                    ])
+                }
+            })
+
+            let texts = d3.select("#compare-text").selectAll('text.compare').data(textData)
+                    .join("text")
+                    .attr("class", "compare");
+
+            let xPadding = 10;
+            let yPosition = 0;
+            texts.attr("x", xPadding)
+                .attr("y", function (d) {
+                    yPosition += 20;
+                    return yPosition;
+                })
+                .attr("text-anchor", "start")
+                .attr("alignment-baseline", "hanging")
+                .attr("font-size", 22)
+
+            let tspans = texts.selectAll("tspan").data(d => d).join("tspan")
+                .style("fill", d => d.color)
+                .style("font-weight", d => d.color == "black" ? 100 : 900)
+                .text(d => d.text)
+        }
+        
+        const checkCompareRadarPlot = () => {
+            if (hasUserRadarPlot && hasCountryRadarPlot) {
+                const featureData = drawCompareRadarPlot();
+                drawComparePlotText(featureData[0], featureData[1])
+            }
+        }
+
+        const drawRadarPlot = async (audioFeatures, plotId) => {
             let radarPlot = d3.select(plotId);
             let radarWidth = radarPlot.attr("width")
             let radarHeight = radarPlot.attr("height")
@@ -359,8 +464,8 @@
                 return {"x": radarWidth / 2 + x, "y": radarHeight / 2 - y};
             }
 
-            let featureData = features.map((f, i) => {
-                let angle = (Math.PI / 2) + (2 * Math.PI * i / features.length)
+            let featureData = radarFeatures.map((f, i) => {
+                let angle = (Math.PI / 2) + (2 * Math.PI * i / radarFeatures.length)
                 return {
                     "name": f,
                     "angle": angle,
@@ -392,15 +497,14 @@
 
             const getPathCoordinates = (dataPoint) => {
                 let coordinates = [];
-                for (var i = 0; i < features.length; i++) {
-                    let featureName = features[i];
-                    let angle = (Math.PI / 2) + (2 * Math.PI * i / features.length);
+                for (var i = 0; i < radarFeatures.length; i++) {
+                    let featureName = radarFeatures[i];
+                    let angle = (Math.PI / 2) + (2 * Math.PI * i / radarFeatures.length);
                     coordinates.push(angleToCoordinate(angle, dataPoint[featureName]))
                 }
                 return coordinates
             } 
 
-            console.log(plotColors[1])
             radarPlot.selectAll("path").data(audioFeatures)
                      .join("path")
                      .datum(d => { return getPathCoordinates(d) })
@@ -411,29 +515,6 @@
                      .attr("stroke-opacity", 1)
                      .attr("opacity", 0.5)
                      .transition()
-        }
-
-        const compareRadarPlots = () => {
-            const avgUserAudioFeatures = {}
-            userAudioFeaturesArray = userAudioFeatures.map(d => Object.values(d)[0])
-            const features = Object.keys(userAudioFeaturesArray[0]);
-            features.forEach(k => {
-                avgUserAudioFeatures[k] = userAudioFeaturesArray.reduce((total, next) => total + next[k], 0) / userAudioFeaturesArray.length;
-                avgUserAudioFeatures[k] = Math.round(avgUserAudioFeatures[k] * 100) / 100
-            })
-
-            let songFeaturesArray = []
-            const avgCountryAudioFeatures = {}
-            relevantSongs.forEach(song => {
-                const {date_objects, chart, date, artist, rank, region, streams, title, trend, url, ...features} = song
-                songFeaturesArray.push(features)
-            })
-            features.forEach(k => {
-                avgCountryAudioFeatures[k] = songFeaturesArray.reduce((total, next) => total + next[k], 0) / songFeaturesArray.length;
-                avgCountryAudioFeatures[k] = Math.round(avgCountryAudioFeatures[k] * 100) / 100
-            })
-
-            drawRadarPlot([avgUserAudioFeatures, avgCountryAudioFeatures], "#compare-radar-plot", features)
         }
 
         async function fetchUserTopSongs() {
@@ -473,6 +554,7 @@
             const res =  await Promise.resolve(fetchTopTracksAudio(topTracks))
             userAudioFeatures = res
             drawUserRadarPlot();
+            checkCompareRadarPlot();
         }
 
 
@@ -520,6 +602,12 @@
             }));
 
             return audioFeatures
+        }
+
+        const setUserView = () => {
+            d3.select("#hello-container").data([userName])
+              .join("p")
+              .text(`Hello, ${userName}. Welcome to Spotify Global!`);
         }
 
         drawWorldMap();
