@@ -105,6 +105,39 @@
             right: 100px;
             width: 800px;
         }
+
+        #map-explore {
+            display: flex;
+            flex-direction: row;
+            background-color: black;
+            color: white;
+        }
+
+        #map-explore #map-header {
+            font-family: spotifyHeader, sans-serif;
+            font-size: 30px;
+        }
+
+        #map-explore #song-table {
+            font-family: SpotifyNormal, sans-serif;
+            border: 1px solid;
+        }
+
+        #map-explore #song-table thead {
+
+            margin: 12px 6px 24px;
+            padding: 0;
+            font-size: 24px;
+            font-weight: 600;
+
+        }
+
+        #map-explore #song-table tr {
+            padding: 12px 12px 0;
+            font-family: "Work Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+            color: hsl(0, 0%, 95%);
+            background-color: hsl(0, 0%, 10%);
+        }
     </style>
 </head>
 
@@ -114,7 +147,6 @@
             <h1 id="title"><img id="logo" src="images/spotify_logo.svg" alt="Spotify logo" />Global</h1>
             <p>Amy Huang (ach243), Jonna Chen (jc2627), Kate Liang (ksl67), Stephanie Zhang (swz8)</p>
             <h2 id="text">Discover your new favorite music, worldwide.</h2>
-
         </div>
         <div id="row-2">
             <button><a href="/login">Login with Spotify</a></button>
@@ -122,34 +154,33 @@
         </div>
     </div>
     <div id="map-explore">
-        <h3 id="table-name">Please Select a Country</h3>
-        <div class="container">
+        <div id="col-1">
+            <h3 id="map-header">Hover to learn more about a country.</h3>
             <svg id="world-map" height=610 width=975></svg>
-            <button id="resetButton" name="reset" type="submit">Reset</button>
         </div>
-
+        <div id="col-2">
+            <ol id="topTracks"></ol>
+            <table id="song-table">
+                <thead id="thead">
+                    <tr>
+                        <th>Rank</th>
+                        <th>Title</th>
+                        <th>Artist</th>
+                    </tr>
+                </thead>
+                <tbody id="tbody"></tbody>
+            </table>
+        </div>
     </div>
-
-
-    <div id="spider-plots"></div>
+    <div id="spider-plots">
+        <h1 id="selected"></h1>
+    </div>
     <div id="world-playlist"></div>
-
-
     <div id="personalization">
-        <a href="/login">Login with Spotify</a>
-        <div>
-            <button class="timeFilter" name="4 Weeks" type="submit" value="short_term">4 weeks</button>
-            <button class="timeFilter" name="6 Months" type="submit" value="medium_term">6 months</button>
-            <button class="timeFilter" name="All-Time" type="submit" value="long_term">All-Time</button>
-        </div>
+
+
     </div>
-    <div id="hello-container"></div>
     <div id="visualization">
-        <h3 id="table-name">Please Select a Country</h3>
-        <div class="container">
-            <svg id="world-map" height=610 width=975></svg>
-            <button id="resetButton" name="reset" type="submit">Reset</button>
-        </div>
         <div id="radar-container">
             <div id="radar-plots">
                 <div id="individual-radar-plots">
@@ -163,19 +194,6 @@
                     <svg id="compare-text" height="300" width="500"></svg>
                 </div>
             </div>
-        </div>
-        <div id="track-container">
-            <ol id="topTracks"></ol>
-            <table id="song-table">
-                <thead id="thead">
-                    <tr>
-                        <th>Rank</th>
-                        <th>Title</th>
-                        <th>Artist</th>
-                    </tr>
-                </thead>
-                <tbody id="tbody"></tbody>
-            </table>
         </div>
     </div>
 
@@ -284,28 +302,21 @@
             const validCountries = Object.keys(countrySongMap);
 
             var hoverCountry;
+            var hoverCountryData;
             var selectedCountry;
             var selectedCountryData;
             relevantSongs = viral50;
 
             const getRelevantSongs = () => {
-                let country = selectedCountryData.properties.ADMIN;
+                let country = hoverCountryData.properties.ADMIN;
                 return countrySongMap[country]
-            }
-
-            const defaultSongList = () => {
-                console.log("ran default");
-                let country = selectedCountryData.properties.ADMIN;
-                document.getElementById("table-name").innerHTML = "Please Select a Country";
-                document.getElementById("song-table").style.display = "none";
             }
 
             const updateSongList = (relevantSongs) => {
                 if (relevantSongs.length === 0) {
-                    console.log("empty")
                     relevantSongs = [];
                 }
-                let country = selectedCountryData.properties.ADMIN;
+                let country = hoverCountryData.properties.ADMIN;
                 const table = document.getElementById('song-table');
                 const thead = document.getElementById('thead');
                 const tbody = document.getElementById('tbody');
@@ -316,42 +327,17 @@
                     row.insertCell(1).textContent = relevantSongs[i].title;
                     row.insertCell(2).textContent = relevantSongs[i].artist;
                 }
-                document.getElementById("table-name").innerHTML = "Viral 50 Songs for " + country;
                 document.getElementById("song-table").style.display = "block";
             }
 
-            const zoom = d3.zoom().scaleExtent([1, 8]).on("zoom", zoomed);
-            function zoomed(event) {
-                const { transform } = event;
-                viewport.attr("transform", transform);
-                viewport.attr("stroke-width", 1 / transform.k);
+            const clearSongList = () => {
+                var elmtTable = document.getElementById('tbody');
+                var tableRows = elmtTable.getElementsByTagName('tr');
+                var rowCount = tableRows.length;
+                for (var x = 0; x < rowCount; x++) {
+                    elmtTable.deleteRow(tableRows[x]);
+                }
             }
-
-            var rb = document.getElementById("resetButton");
-            function reset() {
-                mapSvg.transition().duration(750).call(
-                    zoom.transform,
-                    d3.zoomIdentity,
-                    d3.zoomTransform(mapSvg.node()).invert([mapWidth / 2, mapHeight / 2])
-                );
-            }
-            rb.addEventListener("click", reset);
-
-
-
-            function clicked(event, d) {
-                const [[x0, y0], [x1, y1]] = path.bounds(d);
-                event.stopPropagation();
-                mapSvg.transition().duration(750).call(
-                    zoom.transform,
-                    d3.zoomIdentity
-                        .translate(mapWidth / 2, mapHeight / 2)
-                        .scale(Math.min(8, 0.9 / Math.max((x1 - x0) / mapWidth, (y1 - y0) / mapHeight)))
-                        .translate(-(x0 + x1) / 2, -(y0 + y1) / 2),
-                    d3.pointer(event, mapSvg.node())
-                );
-            }
-
 
             // Draw map
             const mapSvg = d3.select("#world-map");
@@ -365,9 +351,7 @@
 
             const invalidCountryColor = "#dad7cd"
             const validCountryColor = "#a3b18a"
-            const selectedCountryColor = "#6b9080"
-
-            mapSvg.call(zoom);
+            const hoverCountryColor = "#6b9080"
 
             let countryPaths = viewport.selectAll("countries").data(world.features)
                 .join("path")
@@ -377,46 +361,35 @@
                 .attr("d", path);
 
             countryPaths.on("click", function (e, d) {
-                if (selectedCountry == null) {
-                    console.log("initialize")
-                    selectedCountry = d3.select(this);
-                    selectedCountry.style("fill", selectedCountryColor);
-                    selectedCountryData = d;
-                    relevantSongs = getRelevantSongs()
-                    updateSongList(relevantSongs);
-                } else if (selectedCountryData === d) {
-                    console.log("pressed on the same -- deselect");
-                    selectedCountry.style("fill", validCountries.includes(d.properties.ADMIN) ? validCountryColor : invalidCountryColor);
-                    selectedCountry = null;
-                    defaultSongList();
-                } else {
-                    console.log("pressed on diff country");
-                    selectedCountry.style("fill", validCountries.includes(d.properties.ADMIN) ? validCountryColor : invalidCountryColor);
-                    selectedCountry = d3.select(this);
-                    console.log("new selected country", selectedCountry);
-                    selectedCountry.style("fill", selectedCountryColor);
-                    selectedCountryData = d;
-                    relevantSongs = getRelevantSongs()
-                    updateSongList(relevantSongs);
-                }
-                clicked(e, d);
-                drawUserRadarPlot();
-                drawCountryRadarPlot(relevantSongs, selectedCountryData.properties.ADMIN);
-                checkCompareRadarPlot();
+                selectedCountry = d3.select(this);
+                selectedCountryData = d;
+                let scountry = selectedCountryData.properties.ADMIN;
+
+                document.getElementById("selected").innerHTML = "You've selected " + scountry + ".";
+                document.getElementById("spider-plots").scrollIntoView({ behavior: "smooth" });
+
+                // scroll to next page
+                //drawUserRadarPlot();
+                //drawCountryRadarPlot(relevantSongs, hoverCountryData.properties.ADMIN);
+                //checkCompareRadarPlot();
             }).on("mouseover", function (e, d) {
                 hoverCountry = d3.select(this);
                 hoverCountryData = d;
                 let hcountry = hoverCountryData.properties.ADMIN;
-                hoverCountry.style("fill", validCountries.includes(hcountry) ? selectedCountryColor : invalidCountryColor);
-                document.getElementById("table-name").innerHTML = "Do you want to compare music taste with " + hcountry + "?";
-            }).on("mouseout", function (e, d) {
-                // console.log(selectedCountry == null);
-                if (selectedCountry == null || selectedCountryData.properties.ADMIN != d.properties.ADMIN) {
-                    d3.select(this).style("fill", validCountries.includes(d.properties.ADMIN) ? validCountryColor : invalidCountryColor);
-                    document.getElementById("table-name").innerHTML = "Please Select a Country";
+
+                if (validCountries.includes(hcountry)) {
+                    hoverCountry.style("fill", hoverCountryColor)
+                    document.getElementById("map-header").innerHTML = "Click to compare your music taste with those in " + hcountry + ".";
+                    relevantSongs = getRelevantSongs();
+                    updateSongList(relevantSongs);
                 } else {
-                    d3.select(this).style("fill", selectedCountryColor);
+                    document.getElementById("map-header").innerHTML = "Unfortunately, we don't have data for " + hcountry + " right now.";
                 }
+            }).on("mouseout", function (e, d) {
+                d3.select(this).style("fill", validCountries.includes(d.properties.ADMIN) ? validCountryColor : invalidCountryColor);
+                document.getElementById("map-header").innerHTML = "Hover to learn more about a country.";
+                // empty table here
+                clearSongList();
             });
 
             viewport.append("path")
@@ -447,8 +420,8 @@
             drawRadarPlot([avgUserAudioFeatures], "#user-radar-plot")
         }
 
-        const drawCountryRadarPlot = async (relevantSongs, selectedCountry) => {
-            document.getElementById("country-label").innerText = `${selectedCountry}`
+        const drawCountryRadarPlot = async (relevantSongs, hoverCountry) => {
+            document.getElementById("country-label").innerText = `${hoverCountry}`
 
             hasCountryRadarPlot = true;
             let songFeaturesArray = []
