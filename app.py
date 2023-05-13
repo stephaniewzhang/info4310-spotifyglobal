@@ -80,6 +80,8 @@ def callback():
 
             query_params = urllib.parse.urlencode(params)
             url = "https://api.spotify.com/v1/me/top/tracks?" + query_params
+            track_data = []
+            user_data = []
             response = requests.get(url, headers=headers)
             if response.status_code == 200:
                 tracks = response.json()["items"]
