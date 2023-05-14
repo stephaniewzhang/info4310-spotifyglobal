@@ -164,7 +164,6 @@
             background-color: #616467;
         }
 
-
         #map-explore #map-header {
             font-family: spotifyHeader, sans-serif;
             font-size: 30px;
@@ -206,12 +205,11 @@
         #spider-plots #selected {
             font-family: SpotifyHeader, sans-serif;
             font-size: 40px;
-
         }
 
         #spider-plots #row-1 {
             display: flex;
-            justify-content: space-around;
+            justify-content: flex-end;
         }
 
         #spider-plots #row-1 h1 {
@@ -264,6 +262,57 @@
             color: #fff;
             background-color: #616467;
         }
+
+        #world-playlist #row-1 {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-around;
+        }
+
+        #world-playlist {
+            padding: 50px;
+            background-color: black;
+            color: white;
+        }
+
+        #world-playlist #row-1 h1 {
+            font-family: SpotifyHeader;
+            font-size: 75px;
+        }
+
+        #world-playlist #row-1 #button-row {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-evenly;
+        }
+
+        #world-playlist #row-1 #button-row button {
+            display: inline-block;
+            outline: none;
+            cursor: pointer;
+            font-size: 14px;
+            line-height: 1;
+            border-radius: 500px;
+            transition-property: background-color, border-color, color, box-shadow, filter;
+            transition-duration: .3s;
+            border: 1px solid transparent;
+            letter-spacing: 2px;
+            min-width: 160px;
+            text-transform: uppercase;
+            white-space: normal;
+            font-weight: 700;
+            text-align: center;
+            padding: 16px 14px 18px;
+            color: #616467;
+            box-shadow: inset 0 0 0 2px #616467;
+            background-color: white;
+            height: 48px;
+        }
+
+        #world-playlist #row-1 #button-row button:hover {
+            color: #fff;
+            background-color: #616467;
+        }
     </style>
 </head>
 
@@ -307,12 +356,7 @@
                 <svg id="country-radar-plot" height="500" width="500"></svg>
             </div>
             <div id="comparison">
-                <svg id="compare-text" height="300" width="500"></svg>
-                <p>Your music is xx% happier.</p>
-                <p>Your music is xx% less energetic.</p>
-                <p>Your music is xx% happier.</p>
-                <p>Your music is xx% happier.</p>
-                <p>Your music is xx% less energetic.</p>
+                <svg id="compare-text" height="300" width="400"></svg>
             </div>
         </div>
         <div id="row-2">
@@ -320,15 +364,23 @@
             <button class="timeFilter" name="6 Months" type="submit" value="medium_term">6 months</button>
             <button class="timeFilter" name="All-Time" type="submit" value="long_term">All-Time</button>
         </div>
-
-
     </div>
-    <div id="world-playlist"></div>
-
-
+    <div id="world-playlist">
+        <div id="row-1">
+            <img src="static/images/Spotify_logo_without_text.svg" alt="logo without text" />
+            <div id="right-col">
+                <div id="button-row">
+                    <button class="timeFilter" name="4 Weeks" type="submit" value="short_term">4 weeks</button>
+                    <button class="timeFilter" name="6 Months" type="submit" value="medium_term">6 months</button>
+                    <button class="timeFilter" name="All-Time" type="submit" value="long_term">All-Time</button>
+                </div>
+                <h1><span id="country-name">*Country*</span> Playlist For You</h1>
+            </div>
+        </div>
+        <div id="row-2">
+            all songs here
+        </div>
     </div>
-
-
     <script>
 
         function scrollToMap() {
