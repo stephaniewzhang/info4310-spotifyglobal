@@ -27,6 +27,7 @@
 
         /* my new styling */
         #starter-page,
+        #explanation,
         #map-explore,
         #spider-plots,
         #world-playlist {
@@ -103,6 +104,41 @@
             position: absolute;
             right: 100px;
             width: 800px;
+        }
+
+        #explanation {
+            padding: 100px;
+            padding-bottom: 0;
+            background-color: #f037a5;
+            color: white;
+            position: relative;
+        }
+
+        #explanation h1 {
+            font-family: SpotifyHeader, sans-serif;
+            font-size: 50px;
+        }
+
+        #explanation h2 {
+            font-family: SpotifyHeader, sans-serif;
+            color: #b9fcf0;
+            font-size: 40px;
+        }
+
+        #explanation p,
+        #explanation ul {
+            font-size: 20px;
+        }
+
+        #explanation a {
+            color: white;
+        }
+
+        #explanation img {
+            position: absolute;
+            max-width: 600px;
+            right: 0;
+            bottom: 0;
         }
 
         #map-explore {
@@ -324,9 +360,47 @@
             <h2 id="text">Discover your new favorite music, worldwide.</h2>
         </div>
         <div id="row-2">
-            <button><a onclick="scrollToMap()" href="/login">Login with Spotify</a></button>
+            <button><a href="/login">Login with Spotify</a></button>
             <img id="world-map-photo" src="images/world-map.png" alt="world map" />
         </div>
+    </div>
+    <div id="explanation">
+        <h1>Welcome to Spotify Global!</h1>
+        <p>While many Spotify analysis tools already exist, a minimal amount of them give insight that expands beyond
+            the user's music habits.</p>
+
+        <p>For example:</p>
+        <ul>
+            <li><a href="https://www.statsforspotify.com/">Stats for Spotify</a> shows users their top tracks, artist,
+                and genres.</li>
+            <li><a href="https://pudding.cool/2020/12/judge-my-spotify/">How Bad is Your Spotify</a> judges your music
+                taste in a series of snarky roasts.</li>
+            <li><a href="https://www.instafest.app/">Instafest</a> generates a personalized music festival lineup based
+                on the user's listening history.</li>
+        </ul>
+
+        <p>Spotify Global takes a look at your listening history but compares it to data from all around the world. We
+            take the Top 50 charts from each country, letting you explore internationally to see what the world is
+            listening to.</p>
+
+        <p>Then, we let you compare your music taste against a country you're curious about. We'll tell you if your
+            history is more or less danceable, energetic, happy, etc.</p>
+
+        <p>Finally, you can get some recommendations of songs popular in that country that you're most likely to listen
+            to over and over again. Don't worry, there's no black box AI algorithms here. We look at songs popular in
+            your chosen country and see which have the last squared difference from your music history.</p>
+
+        <p>Resources used:</p>
+        <ul>
+            <li><a href="https://www.kaggle.com/datasets/dhruvildave/spotify-charts">This Kaggle set</a> for the top 50
+                songs in each country.</li>
+            <li><a href="https://developer.spotify.com/documentation/web-api">The Spotify API</a> for accessing the
+                user's Spotify account and getting song traits.</li>
+        </ul>
+
+        <h2>Scroll to the next page to go global.</h2>
+
+        <img id="spotify-world-img" src="images/spotify-world.png" />
     </div>
     <div id="map-explore">
         <h3 id="map-header">Hover to learn more about a country.</h3>
@@ -382,11 +456,6 @@
         </div>
     </div>
     <script>
-
-        function scrollToMap() {
-            document.getElementById("map-explore").scrollIntoView({ behavior: "smooth" });
-
-        }
         var topTracks = []
         var userAudioFeatures = []
         var relevantSongs
