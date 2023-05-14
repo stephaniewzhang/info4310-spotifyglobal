@@ -16,7 +16,6 @@
             src: url("fonts/Gotham-Light.otf");
         }
 
-
         #gmap {
             width: 1600;
             height: 2000;
@@ -107,34 +106,96 @@
         }
 
         #map-explore {
-            display: flex;
-            flex-direction: row;
+            padding-left: 50px;
+            padding-top: 100px;
             background-color: black;
             color: white;
         }
+
+        #map-explore #row {
+            display: flex;
+            flex-direction: row;
+            justify-content: flex-start;
+        }
+
+        #map-explore #col-1 {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            margin-left: 20px;
+        }
+
+        #map-explore h3 {
+            margin-bottom: 100px;
+        }
+
+        #map-explore #col-1 #map-svg {
+            position: relative;
+        }
+
+        #map-explore #col-1 button {
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            display: inline-block;
+            outline: none;
+            cursor: pointer;
+            font-size: 14px;
+            line-height: 1;
+            border-radius: 500px;
+            transition-property: background-color, border-color, color, box-shadow, filter;
+            transition-duration: .3s;
+            border: 1px solid transparent;
+            letter-spacing: 2px;
+            min-width: 160px;
+            text-transform: uppercase;
+            white-space: normal;
+            font-weight: 700;
+            text-align: center;
+            padding: 16px 14px 18px;
+            color: #616467;
+            box-shadow: inset 0 0 0 2px #616467;
+            background-color: white;
+            height: 48px;
+        }
+
+        #map-explore #col-1 button:hover {
+            color: #fff;
+            background-color: #616467;
+        }
+
 
         #map-explore #map-header {
             font-family: spotifyHeader, sans-serif;
             font-size: 30px;
         }
 
-        #map-explore #song-table {
-            font-family: SpotifyNormal, sans-serif;
-            border: 1px solid;
+        #map-explore #col-2 {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            margin-left: 20px;
         }
 
-        #map-explore #song-table thead {
-            margin: 12px 6px 24px;
-            padding: 0;
-            font-size: 24px;
-            font-weight: 600;
+        #map-explore #col-2 h1 {
+            font-family: SpotifyHeader;
+            color: grey;
+            font-size: 40px;
         }
 
-        #map-explore #song-table tr {
-            padding: 12px 12px 0;
-            font-family: "Work Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
-            color: hsl(0, 0%, 95%);
-            background-color: hsl(0, 0%, 10%);
+        #map-explore #col-2 span {
+            color: white;
+        }
+
+        #map-explore .top-song {
+            display: flex;
+            flex-direction: row;
+        }
+
+        #map-explore .top-song p {
+            display: flex;
+            flex-direction: row;
+            margin: 10px;
         }
 
         #spider-plots {
@@ -214,27 +275,24 @@
             <h2 id="text">Discover your new favorite music, worldwide.</h2>
         </div>
         <div id="row-2">
-            <button onclick="scrollToMap()"><a href="/login">Login with Spotify</a></button>
+            <button><a onclick="scrollToMap()" href="/login">Login with Spotify</a></button>
             <img id="world-map-photo" src="images/world-map.png" alt="world map" />
         </div>
     </div>
     <div id="map-explore">
-        <div id="col-1">
-            <h3 id="map-header">Hover to learn more about a country.</h3>
-            <svg id="world-map" height=610 width=975></svg>
-        </div>
-        <div id="col-2">
-            <ol id="topTracks"></ol>
-            <table id="song-table">
-                <thead id="thead">
-                    <tr>
-                        <th>Rank</th>
-                        <th>Title</th>
-                        <th>Artist</th>
-                    </tr>
-                </thead>
-                <tbody id="tbody"></tbody>
-            </table>
+        <h3 id="map-header">Hover to learn more about a country.</h3>
+        <div id="row">
+            <div id="col-1">
+                <div id="map-svg">
+                    <svg id="world-map" height=600 width=840></svg>
+                    <button id="resetButton" name="reset" type="submit">Reset</button>
+                </div>
+            </div>
+            <div id="col-2">
+                <div id="top-songs-panel">
+                    <h1>Top 10 Songs <span id="country-span"></span></h1>
+                </div>
+            </div>
         </div>
     </div>
     <div id="spider-plots">
@@ -361,7 +419,6 @@
 
         d3.selectAll(".timeFilter").on("click", fetchUserTopSongs);
 
-        document.getElementById("song-table").style.display = "none";
         const drawWorldMap = async () => {
             // Load data
             let world = await d3.json("countries.geojson");
@@ -378,6 +435,8 @@
                     countrySongMap[country] = [song]
                 }
             })
+
+            document.getElementById("top-songs-panel").style.display = "none";
             const validCountries = Object.keys(countrySongMap);
 
             var hoverCountry;
@@ -395,28 +454,43 @@
                 if (relevantSongs.length === 0) {
                     relevantSongs = [];
                 }
-                let country = hoverCountryData.properties.ADMIN;
-                const table = document.getElementById('song-table');
-                const thead = document.getElementById('thead');
-                const tbody = document.getElementById('tbody');
 
-                for (let i = 0; i < relevantSongs.length; i++) {
-                    const row = tbody.insertRow(i);
-                    row.insertCell(0).textContent = relevantSongs[i].rank;
-                    row.insertCell(1).textContent = relevantSongs[i].title;
-                    row.insertCell(2).textContent = relevantSongs[i].artist;
+                let country = hoverCountryData.properties.ADMIN;
+                const panel = document.getElementById('top-songs-panel')
+
+                for (let i = 0; i < 10; i++) {
+                    let rank = relevantSongs[i].rank
+                    let title = relevantSongs[i].title
+                    let artist = relevantSongs[i].artist
+
+                    panel.innerHTML += "<div class='top-song'><p>#" + rank + "</p><p>" + title + "</p><p>" + artist + "</p></div>"
+
                 }
-                document.getElementById("song-table").style.display = "block";
+                document.getElementById("top-songs-panel").style.display = "block";
             }
 
             const clearSongList = () => {
-                var elmtTable = document.getElementById('tbody');
-                var tableRows = elmtTable.getElementsByTagName('tr');
-                var rowCount = tableRows.length;
-                for (var x = 0; x < rowCount; x++) {
-                    elmtTable.deleteRow(tableRows[x]);
-                }
+                document.getElementById('top-songs-panel').innerHTML = "<h1>Top 10 Songs <span id='country-span'></span></h1>"
+                document.getElementById("top-songs-panel").style.display = "none";
             }
+
+
+            const zoom = d3.zoom().scaleExtent([1, 8]).on("zoom", zoomed);
+            function zoomed(event) {
+                const { transform } = event;
+                viewport.attr("transform", transform);
+                viewport.attr("stroke-width", 1 / transform.k);
+            }
+
+            var rb = document.getElementById("resetButton");
+            function reset() {
+                mapSvg.transition().duration(750).call(
+                    zoom.transform,
+                    d3.zoomIdentity,
+                    d3.zoomTransform(mapSvg.node()).invert([mapWidth / 2, mapHeight / 2])
+                );
+            }
+            rb.addEventListener("click", reset);
 
             // Draw map
             const mapSvg = d3.select("#world-map");
@@ -427,6 +501,8 @@
 
             const projection = d3.geoMercator().fitSize([mapWidth, mapHeight], world);
             const path = d3.geoPath().projection(projection);
+
+            mapSvg.call(zoom);
 
             const invalidCountryColor = "#dad7cd"
             const validCountryColor = "#a3b18a"
@@ -460,6 +536,7 @@
                 if (validCountries.includes(hcountry)) {
                     hoverCountry.style("fill", hoverCountryColor)
                     document.getElementById("map-header").innerHTML = "Click to compare your music taste with those in " + hcountry + ".";
+                    document.getElementById("country-span").innerHTML = hcountry
                     relevantSongs = getRelevantSongs();
                     updateSongList(relevantSongs);
                 } else {
@@ -468,8 +545,8 @@
             }).on("mouseout", function (e, d) {
                 d3.select(this).style("fill", validCountries.includes(d.properties.ADMIN) ? validCountryColor : invalidCountryColor);
                 document.getElementById("map-header").innerHTML = "Hover to learn more about a country.";
-                // empty table here
                 clearSongList();
+                document.getElementById("top-songs-panel").style.display = "none";
             });
 
             viewport.append("path")
