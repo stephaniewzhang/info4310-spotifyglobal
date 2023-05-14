@@ -72,6 +72,7 @@ def callback():
                 "Authorization": f"Bearer {access_token}",
                 "Content-Type": "application/json"
             } 
+            print("bearer", access_token)
             params = {
                 "time_range": "short_term",
                 "limit": 50,
@@ -85,8 +86,22 @@ def callback():
             response = requests.get(url, headers=headers)
             if response.status_code == 200:
                 tracks = response.json()["items"]
-                track_data = [{"id": track["id"], "name": track["name"], "url": track["external_urls"]["spotify"], "popularity": track["popularity"]} for track in tracks]
-
+                track_data = []
+                for track in tracks: 
+                    artist_data_response = requests.get(track["artists"][0]["href"], headers=headers)
+                    artist_data = artist_data_response.json()
+                    data = {
+                        "id": track["id"], 
+                        "name": track["name"],
+                        "url": track["external_urls"]["spotify"],
+                        "popularity": track["popularity"],
+                        "image_url": track["album"]["images"][0]["url"], 
+                        "artists": [a["name"] for a in track["artists"]],
+                        "genres": artist_data["genres"],
+                        "artist_url": artist_data["images"][0]["url"]
+                    }
+                    track_data.append(data)
+                    
             user_url = "https://api.spotify.com/v1/me"
             user_response = requests.get(user_url, headers=headers)
             if user_response.status_code == 200: 

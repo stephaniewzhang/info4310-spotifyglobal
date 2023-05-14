@@ -28,6 +28,7 @@
         /* my new styling */
         #starter-page,
         #explanation,
+        #user-summary, 
         #map-explore,
         #spider-plots,
         #world-playlist {
@@ -141,6 +142,10 @@
             bottom: 0;
         }
 
+        #user-summary {
+            background-color: #A5E9B2;
+        }
+
         #map-explore {
             padding-left: 50px;
             padding-top: 100px;
@@ -245,7 +250,6 @@
 
         #spider-plots #row-1 {
             display: flex;
-            justify-content: flex-end;
         }
 
         #spider-plots #row-1 h1 {
@@ -432,6 +436,11 @@
 
         <img id="spotify-world-img" src="images/spotify-world.png" />
     </div>
+    <div id="user-summary">
+        <div id="user-top-artists"></div>
+        <div id="user-top-songs"></div>
+        
+    </div>
     <div id="map-explore">
         <h3 id="map-header">Hover to learn more about a country.</h3>
         <div id="row">
@@ -459,7 +468,7 @@
                 <svg id="user-radar-plot" height="500" width="500"></svg>
             </div>
             <div id="country-plot">
-                <h1 id="country-label"></h1>
+                <h1 id="country-label">Select A Country</h1>
                 <svg id="country-radar-plot" height="500" width="500"></svg>
             </div>
             <div id="comparison">
@@ -506,12 +515,15 @@
             "instrumentalness": "instrumental",
             "valence": "happy"
         }
-        var userName = ""
 
         '{% for track in data["track_data"] %}'
         var id = ""
         var name = ""
         var url = ""
+        var image_url = ""
+        var genres = ""
+        var artists = ""
+        var artist_url = ""
 
         try {
             id = JSON.parse('{{track["id"]|tojson|safe}}')
@@ -541,7 +553,31 @@
             console.log(e)
         }
 
-        topTracks.push({ "id": id, "name": name, "url": url, "popularity": popularity })
+        try {
+            image_url = JSON.parse('{{track["image_url"]|tojson|safe}}')
+        } catch (e) {
+            image_url = JSON.parse('{{track["image_url"]|tojson|safe}}')
+        }
+
+        try {
+            artists = JSON.parse('{{track["artists"]|tojson|safe}}')
+        } catch (e) {
+            artists = JSON.parse('{{track["artists"]|tojson|safe}}')
+        }
+
+        try {
+            genres = JSON.parse('{{track["genres"]|tojson|safe}}')
+        } catch (e) {
+            genres = JSON.parse('{{track["genres"]|tojson|safe}}')
+        }
+        
+        try {
+            artist_url = JSON.parse('{{track["artist_url"]|tojson|safe}}')
+        } catch (e) {
+            artist_url = JSON.parse('{{track["artist_url"]|tojson|safe}}')
+        }
+
+        topTracks.push({ "id": id, "name": name, "url": url, "popularity": popularity , "image_url": image_url, "genres": genres, "artists": artists, "artist_url": artist_url })
         '{% endfor %}'
 
         try {
@@ -550,16 +586,9 @@
             userName = '{{data["user_data"]}}'
             console.log(e)
         }
+
         console.log(userName)
-        console.log(topTracks)
-        const setUserView = () => {
-            d3.select("#hello-container").data([userName])
-                .join("p")
-                .text(`Hello, ${userName}. Welcome to Spotify Global!`);
-        }
-        if (userName.substring(0, 1) != "{"){
-            setUserView();
-        }
+        console.log("topTracks", topTracks)
  
         function getRecommendedSongs(userAudioFeatures, selectedCountry){
             let recommendations = []
@@ -618,6 +647,20 @@
         }
 
         d3.selectAll(".timeFilter").on("click", fetchUserTopSongs);
+
+        const drawUnwrapped = () => {
+            const panel = document.getElementById('top-songs-panel')
+
+for (let i = 0; i < 10; i++) {
+    let rank = relevantSongs[i].rank
+    let title = relevantSongs[i].title
+    let artist = relevantSongs[i].artist
+
+    panel.innerHTML += "<div class='top-song'><p>#" + rank + "</p><p>" + title + "</p><p>" + artist + "</p></div>"
+
+}
+document.getElementById("top-songs-panel").style.display = "block";
+        }
 
         const drawWorldMap = async () => {
             // Load data
@@ -723,7 +766,6 @@
                 document.getElementById("spider-plots").scrollIntoView({ behavior: "smooth" });
 
                 // scroll to next page
-                //drawUserRadarPlot();
                 relevantSongs = getRelevantSongs();
                 drawCountryRadarPlot(relevantSongs, selectedCountryName);
                 getRecommendedSongs(userAudioFeatures, selectedCountryName)
@@ -989,7 +1031,7 @@
                     tracks = res.data["items"]
                     topTracks = []
                     for (let i = 0; i < tracks.length; i++) {
-                        topTracks.push({ "id": tracks[i]["id"], "name": tracks[i]["name"], "url": tracks[i]["external_urls"]["spotify"], "popularity": tracks[i]["popularity"] })
+                        topTracks.push({ "id": tracks[i]["id"], "name": tracks[i]["name"], "url": tracks[i]["external_urls"]["spotify"], "popularity": tracks[i]["popularity"], "image_url": tracks[i]["image_url"], "artists": tracks[i]["artists"], "artist_url": tracks[i]["artist_url"] })
                     }
                 }));
 
@@ -997,6 +1039,7 @@
             userAudioFeatures = res
             drawUserRadarPlot();
             getRecommendedSongs(userAudioFeatures, selectedCountryName)
+            drawUnwrapped()
             // checkCompareRadarPlot();
         }
 
