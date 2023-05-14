@@ -484,7 +484,7 @@
                 <h1><span id="country-name">*Country*</span> Playlist For You</h1>
             </div>
         </div>
-        <div id="row-2">
+        <div id="playlist-songs">
             all songs here
         </div>
         <button id="restart" onclick="scrollBackToMap()">Go back to country select</button>
@@ -554,37 +554,46 @@
 
         var topTracksList = d3.select("#topTracks");
 
-        function getRecommendedSongs(userAudioFeatures){
+        function getRecommendedSongs(userAudioFeatures, selectedCountry){
             let recommendations = []
             let averageAudioFeatures = getUserAvgAudioFeatures(userAudioFeatures)
-            // For each country, calculate difference between user and song
-            const validCountries = Object.keys(countrySongMap);
-            for(let i = 0; i < validCountries; i++){
-                country = validCountries[i]
-                differences = []
-                for(let j = 0; j < countrySongMap[i]; j++){
-                    d1 = Math.pow(averageAudioFeatures["danceability"] - countrySongMap[i][j]["danceability"], 2)
-                    d2 = Math.pow(averageAudioFeatures["energy"] - countrySongMap[i][j]["energy"], 2)
-                    d3 = Math.pow(averageAudioFeatures["valence"] - countrySongMap[i][j]["valence"], 2)
-                    d4 = Math.pow(averageAudioFeatures["acousticness"] - countrySongMap[i][j]["acousticness"], 2)
-                    d5 = Math.pow(averageAudioFeatures["instrumentalness"] - countrySongMap[i][j]["instrumentalness"], 2)
-                    d6 = Math.pow(averageAudioFeatures["popularity"] - countrySongMap[i][j]["popularity"], 2)
+            // For each viral song of selectedCountry, calculate difference between user and song
+            differences = []
+            songs = countrySongMap[selectedCountry]
+            for(let i = 0; i < songs.length; i++){
+                total = 0
+                total += Math.pow(averageAudioFeatures["danceability"] - songs[i]["danceability"], 2)
+                total += Math.pow(averageAudioFeatures["energy"] - songs[i]["energy"], 2)
+                total += Math.pow(averageAudioFeatures["valence"] - songs[i]["valence"], 2)
+                total += Math.pow(averageAudioFeatures["acousticness"] - songs[i]["acousticness"], 2)
+                total += Math.pow(averageAudioFeatures["instrumentalness"] - songs[i]["instrumentalness"], 2)
+                total += Math.pow(averageAudioFeatures["popularity"] - songs[i]["popularity"], 2)
 
-                    smallest_difference = Math.min([d1, d2, d3, d4, d5, d6])
-                    differences.push([smallest_difference, j])
-                }
-                // Sort differences 
-                differences = differences.sort((a, b) => a[0] - b[0])
-                // Get top 5 songs 
-                for(let j = 0; j < 5; j++){
-                    song = countrySongMap[i][differences[j][1]]
-                    song["similarity"] = (1 - differences[j][0])/100
-                    recommendations.push(song)
-                }
+                differences.push([total, i])
+            }
+            // Sort differences 
+            differences = differences.sort((a, b) => a[0] - b[0])
+            console.log(differences)
+            // Get top 5 songs 
+            for(let j = 0; j < 5; j++){
+                song = songs[differences[j][1]]
+                song["similarity"] = (1 - differences[j][0])*100
+                recommendations.push(song)
             }
             // Return sorted list based on smallest difference
             recommendations = recommendations.sort((a, b) => a.similarity - b.similarity).reverse()
-            return recommendations
+
+            console.log(recommendations)
+            
+            document.getElementById("country-name").innerText = selectedCountry
+            document.getElementById("playlist-songs").innerText = ""
+
+            text = ""
+            for(let i = 0; i < recommendations.length; i++){
+                text += recommendations[i]["title"] + "\n"
+            }
+
+            document.getElementById("playlist-songs").innerText = text
         }
         
         for (let i = 0; i < topTracks.length; i++) {
@@ -715,6 +724,7 @@
                 //drawUserRadarPlot();
                 relevantSongs = getRelevantSongs();
                 drawCountryRadarPlot(relevantSongs, scountry);
+                getRecommendedSongs(userAudioFeatures, scountry)
                 //checkCompareRadarPlot();
             }).on("mouseover", function (e, d) {
                 hoverCountry = d3.select(this);
@@ -754,15 +764,16 @@
             drawRadarPlot([], "#country-radar-plot", [])
         }
 
-        function getUserAvgAudioFeatures(audioFeatures){
+        function getUserAvgAudioFeatures(userAudioFeatures){
             const avgUserAudioFeatures = {}
-            userAudioFeaturesArray = audioFeatures.map(d => Object.values(d)[0])
+            userAudioFeaturesArray = userAudioFeatures.map(d => Object.values(d)[0])
             radarFeatures.forEach(k => {
-                avgUserAudioFeatures[k] = audioFeatures.reduce((total, next) => total + next[k], 0) / audioFeatures.length;
+                avgUserAudioFeatures[k] = userAudioFeaturesArray.reduce((total, next) => total + next[k], 0) / userAudioFeaturesArray.length;
                 avgUserAudioFeatures[k] = Math.round(avgUserAudioFeatures[k] * 100) / 100
             })
             return avgUserAudioFeatures
         }
+
         const drawUserRadarPlot = async () => {
             hasUserRadarPlot = true;
             const avgUserAudioFeatures = getUserAvgAudioFeatures(userAudioFeatures)
@@ -990,7 +1001,6 @@
             userAudioFeatures = res
             drawUserRadarPlot();
             checkCompareRadarPlot();
-            console.log(getRecommendedSongs(userAudioFeatures))
         }
 
 
