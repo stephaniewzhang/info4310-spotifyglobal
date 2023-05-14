@@ -496,6 +496,7 @@
         var relevantSongs
         var hasUserRadarPlot = false
         var hasCountryRadarPlot = false
+        var selectedCountryName = null
         const radarFeatures = ["danceability", "energy", "popularity", "acousticness", "instrumentalness", "valence"]
         const featureTextMap = {
             "danceability": "danceable",
@@ -551,9 +552,15 @@
         }
         console.log(userName)
         console.log(topTracks)
-
-        var topTracksList = d3.select("#topTracks");
-
+        const setUserView = () => {
+            d3.select("#hello-container").data([userName])
+                .join("p")
+                .text(`Hello, ${userName}. Welcome to Spotify Global!`);
+        }
+        if (userName.substring(0, 1) != "{"){
+            setUserView();
+        }
+ 
         function getRecommendedSongs(userAudioFeatures, selectedCountry){
             let recommendations = []
             let averageAudioFeatures = getUserAvgAudioFeatures(userAudioFeatures)
@@ -571,9 +578,7 @@
 
                 differences.push([total, i])
             }
-            // Sort differences 
             differences = differences.sort((a, b) => a[0] - b[0])
-            console.log(differences)
             // Get top 5 songs 
             for(let j = 0; j < 5; j++){
                 song = songs[differences[j][1]]
@@ -606,13 +611,10 @@
                     if (value != null) {
                         userAudioFeatures = value;
                         drawUserRadarPlot();
-                        checkCompareRadarPlot();
-                        setUserView();
+                        // checkCompareRadarPlot();
                     }
                 })
             })();
-            topTracksList.append("li").text(topTracks[i]["name"])
-
         }
 
         d3.selectAll(".timeFilter").on("click", fetchUserTopSongs);
@@ -638,7 +640,7 @@
 
             var hoverCountry;
             var hoverCountryData;
-            var selectedCountry;
+            var seletedCountry;
             var selectedCountryData;
             relevantSongs = viral50;
 
@@ -715,16 +717,16 @@
             countryPaths.on("click", function (e, d) {
                 selectedCountry = d3.select(this);
                 selectedCountryData = d;
-                let scountry = selectedCountryData.properties.ADMIN;
+                selectedCountryName = selectedCountryData.properties.ADMIN;
 
-                document.getElementById("selected").innerHTML = "Let's see how you compare with " + scountry + ".";
+                document.getElementById("selected").innerHTML = "Let's see how you compare with " + selectedCountryName + ".";
                 document.getElementById("spider-plots").scrollIntoView({ behavior: "smooth" });
 
                 // scroll to next page
                 //drawUserRadarPlot();
                 relevantSongs = getRelevantSongs();
-                drawCountryRadarPlot(relevantSongs, scountry);
-                getRecommendedSongs(userAudioFeatures, scountry)
+                drawCountryRadarPlot(relevantSongs, selectedCountryName);
+                getRecommendedSongs(userAudioFeatures, selectedCountryName)
                 //checkCompareRadarPlot();
             }).on("mouseover", function (e, d) {
                 hoverCountry = d3.select(this);
@@ -991,16 +993,11 @@
                     }
                 }));
 
-            document.getElementById("topTracks").innerHTML = "";
-            var topTracksList = d3.select("#topTracks");
-            for (let i = 0; i < topTracks.length; i++) {
-                topTracksList.append("li").text(topTracks[i]["name"])
-            }
-
             const res = await Promise.resolve(fetchTopTracksAudio(topTracks))
             userAudioFeatures = res
             drawUserRadarPlot();
-            checkCompareRadarPlot();
+            getRecommendedSongs(userAudioFeatures, selectedCountryName)
+            // checkCompareRadarPlot();
         }
 
 
@@ -1017,7 +1014,6 @@
             });
 
             var audioFeatures = []
-            console.log("token", `${token}`)
 
             const result = await fetch("https://api.spotify.com/v1/audio-features?" + args, {
                 method: "GET", headers: { Authorization: `Bearer ${token}` }
@@ -1048,12 +1044,6 @@
                 }));
 
             return audioFeatures
-        }
-
-        const setUserView = () => {
-            d3.select("#hello-container").data([userName])
-                .join("p")
-                .text(`Hello, ${userName}. Welcome to Spotify Global!`);
         }
 
         drawWorldMap();
