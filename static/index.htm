@@ -118,6 +118,9 @@
                 <tbody id = "tbody"></tbody>
             </table>
         </div>
+        <div id="world-playlist">
+
+        </div>
     </div>
     
     <script>
@@ -136,6 +139,17 @@
             "valence": "happy"
         }
         var userName = ""
+        var viral50 = await d3.json('viral_50_with_features.json');
+            const countrySongMap = {}; // maps countries to lists of their top 50 songs
+            Object.keys(viral50).forEach(k => {
+                let song = viral50[k]
+                let country = song.region
+                if (countrySongMap.hasOwnProperty(country)) {
+                    countrySongMap[country].push(song)
+                } else {
+                    countrySongMap[country] = [song]
+                }
+            })
 
         '{% for track in data["track_data"] %}'
         var id = ""
@@ -183,6 +197,41 @@
         console.log(topTracks)
         
         var topTracksList = d3.select("#topTracks");
+
+        console.log(getRecommendedSongs(userAudioFeatures))
+
+        function getRecommendedSongs(userAudioFeatures){
+            let recommendations = []
+            let averageAudioFeatures = getUserAvgAudioFeatures(userAudioFeatures)
+            // For each country, calculate difference between user and song
+            const validCountries = Object.keys(countrySongMap);
+            for(let i = 0; i < validCountries; i++){
+                country = validCountries[i]
+                differences = []
+                for(let j = 0; j < countrySongMap[i]; j++){
+                    d1 = Math.pow(averageAudioFeatures["danceability"] - countrySongMap[i][j]["danceability"], 2)
+                    d2 = Math.pow(averageAudioFeatures["energy"] - countrySongMap[i][j]["energy"], 2)
+                    d3 = Math.pow(averageAudioFeatures["valence"] - countrySongMap[i][j]["valence"], 2)
+                    d4 = Math.pow(averageAudioFeatures["acousticness"] - countrySongMap[i][j]["acousticness"], 2)
+                    d5 = Math.pow(averageAudioFeatures["instrumentalness"] - countrySongMap[i][j]["instrumentalness"], 2)
+                    d6 = Math.pow(averageAudioFeatures["popularity"] - countrySongMap[i][j]["popularity"], 2)
+
+                    smallest_difference = Math.min([d1, d2, d3, d4, d5, d6])
+                    differences.push([smallest_difference, j])
+                }
+                // Sort differences 
+                differences = differences.sort((a, b) => a[0] - b[0])
+                // Get top 5 songs 
+                for(let j = 0; j < 5; j++){
+                    song = countrySongMap[i][differences[j][1]]
+                    song["similarity"] = (1 - differences[j][0])/100
+                    recommendations.push(song)
+                }
+            }
+            // Return sorted list based on smallest difference
+            recommendations = recommendations.sort((a, b) => a.similarity - b.similarity).reverse()
+            return recommendations
+        }
         
         for (let i = 0; i < topTracks.length; i++) {
             if (topTracks[i]["url"].substring(0, 5) != "https") {
@@ -211,17 +260,6 @@
             let world = await d3.json("countries.geojson");
             // Remove Greenland and Antarctica
             world.features = world.features.filter(d => d.properties.ISO_A3 != "GRL" && d.properties.ISO_A3 != "ATA");
-            var viral50 = await d3.json('viral_50_with_features.json');
-            const countrySongMap = {}; // maps countries to lists of their top 50 songs
-            Object.keys(viral50).forEach(k => {
-                let song = viral50[k]
-                let country = song.region
-                if (countrySongMap.hasOwnProperty(country)) {
-                    countrySongMap[country].push(song)
-                } else {
-                    countrySongMap[country] = [song]
-                }
-            })
             const validCountries = Object.keys(countrySongMap);
             
             var hoverCountry;
@@ -377,14 +415,18 @@
             drawRadarPlot([], "#country-radar-plot", [])
         }
 
-        const drawUserRadarPlot = async () => {
-            hasUserRadarPlot = true;
+        function getUserAvgAudioFeatures(audioFeatures){
             const avgUserAudioFeatures = {}
-            userAudioFeaturesArray = userAudioFeatures.map(d => Object.values(d)[0])
+            userAudioFeaturesArray = audioFeatures.map(d => Object.values(d)[0])
             radarFeatures.forEach(k => {
-                avgUserAudioFeatures[k] = userAudioFeaturesArray.reduce((total, next) => total + next[k], 0) / userAudioFeaturesArray.length;
+                avgUserAudioFeatures[k] = audioFeatures.reduce((total, next) => total + next[k], 0) / audioFeatures.length;
                 avgUserAudioFeatures[k] = Math.round(avgUserAudioFeatures[k] * 100) / 100
             })
+            return avgUserAudioFeatures
+        }
+        const drawUserRadarPlot = async () => {
+            hasUserRadarPlot = true;
+            const avgUserAudioFeatures = getUserAvgAudioFeatures(userAudioFeatures)
             drawRadarPlot([avgUserAudioFeatures], "#user-radar-plot")
         }
 
