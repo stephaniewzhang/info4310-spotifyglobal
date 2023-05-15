@@ -29,9 +29,13 @@
         #explanation,
         #user-summary, 
         #map-explore,
-        #spider-plots,
         #world-playlist {
             height: 100vh;
+            font-family: spotifyNormal, sans-serif;
+        }
+
+        #spider-plots{
+            height: 120vh;
             font-family: spotifyNormal, sans-serif;
         }
 
@@ -101,12 +105,12 @@
             margin-bottom: 20px;
         }
 
-        #user-top-artists, #user-top-songs {
+        #user-top-artists, #user-top-songs, #playlist-songs {
             width: 100%;
             table-layout: fixed;
         }
 
-        #user-top-artists td, #user-top-songs td{
+        #user-top-artists td, #user-top-songs, #playlist-songs td{
             padding: 0 15px;
             font-family: SpotifyHeader, sans-serif;
         }
@@ -379,6 +383,63 @@
         #world-playlist button#restart:hover {
             background-color: #1db954;
         }
+
+        .playlist-td-1 {
+            width: 10%;
+            font-weight: bold;
+            font-size: 50px;
+            color: white;
+        }
+
+        .playlist-td-2 {
+            width: 10%;
+            color: white;
+        }
+
+        .playlist-td-3 {
+            width: 50%;
+            font-weight: 600;
+            font-size: 25px;
+            color: white;
+        }
+
+        .playlist-td-4 {
+            width: 10%;
+            color: white;
+        }
+        .playlist-td-5 {
+            width: 10%;
+            color: white;
+        }
+
+        .playlist-th-1 {
+            width: 10%;
+        }
+
+        .playlist-th-2 {
+            width: 10%;
+        }
+
+
+        .playlist-th-3 {
+            width: 50%;
+            color: white;
+            font-weight: bold;
+            font-size: 25;
+        }
+
+        .playlist-th-4 {
+            width: 10%;
+            color: white;
+            font-weight: bold;
+            font-size: 25;
+        }
+        .playlist-th-5 {
+            width: 10%;
+            color: white;
+            font-weight: bold;
+            font-size: 25;
+        }
     </style>
 </head>
 
@@ -486,7 +547,9 @@
                 <h1><span id="country-name">*Country*</span> Playlist For You</h1>
             </div>
         </div>
-        <div id="playlist-songs">
+        <div>
+            <table id="playlist-songs">
+            </table>
         </div>
         <button id="restart" onclick="scrollBackToMap()">Go back to country select</button>
     </div>
@@ -582,7 +645,7 @@
         console.log(userName)
         console.log("topTracks", topTracks)
  
-        function getRecommendedSongs(userAudioFeatures, selectedCountry){
+        async function getRecommendedSongs(userAudioFeatures, selectedCountry){
             let recommendations = []
             let averageAudioFeatures = getUserAvgAudioFeatures(userAudioFeatures)
             // For each viral song of selectedCountry, calculate difference between user and song
@@ -608,40 +671,19 @@
             }
             // Return sorted list based on smallest difference
             recommendations = recommendations.sort((a, b) => a.similarity - b.similarity).reverse()
-
+            const res = await Promise.resolve(fetchPlaylistImages(recommendations))
+            recommendations = res
             console.log(recommendations)
+
+            playlist = document.getElementById("playlist-songs")
+            playlist.innerHTML = "<tr><th class='playlist-th-1'></th><th class='playlist-th-2'></th><th class = 'playlist-th-3'>Title</th><th class = 'playlist-th-4'>Artist</th><th class = 'playlist-th-5'>Similarity</th></tr>"
+
+            for (let i = 0; i < recommendations.length; i++) {
+                song = recommendations[i];
+                playlist.innerHTML += `<tr><td class='playlist-td-1'>#${i + 1}</td><td class='playlist-td-2'><img class='unwrapped-img' src=${song.image}></td><td class='playlist-td-3'>${song.title}</td><td class='playlist-td-4'>${song.artist}</td><td class='playlist-td-5'>${song.similarity}%</td></tr>`
+            }
             
             document.getElementById("country-name").innerText = selectedCountry
-            document.getElementById("playlist-songs").innerText = ""
-
-            var table = d3.select("#playlist-songs").append("table")
-            columns = ["title", "artist", "similarity"]
-            thead = table.append("thead"),
-            tbody = table.append("tbody");
-
-            thead.append("tr")
-                .selectAll("th")
-                .data(columns)
-                .enter()
-                .append("th")
-                    .text(function(column) { return column; })
-                    .style('color', 'white')
-
-            var rows = tbody.selectAll("tr")
-                    .data(recommendations)
-                    .enter()
-                    .append("tr");
-
-            var cells = rows.selectAll("td")
-                            .data(function(row) {
-                                return columns.map(function(column) {
-                                    return {column: column, value: row[column]};
-                                });
-                            })
-                            .enter()
-                            .append("td")
-                            .style('color', 'white')
-                            .html(function(d) { return d.value; });
         }
         
         for (let i = 0; i < topTracks.length; i++) {
@@ -673,7 +715,6 @@
 
             // Get user data
             let genres = []
-            console.log("top tracks checking genres", topTracks)
             topTracks.forEach(t => {
                 for (let genre of t["genres"]) {
                     genres.push(genre)
@@ -829,7 +870,7 @@
                 // scroll to next page
                 relevantSongs = getRelevantSongs();
                 drawCountryRadarPlot(relevantSongs, selectedCountryName);
-                getRecommendedSongs(userAudioFeatures, selectedCountryName)
+                getRecommendedSongs(userAudioFeatures, selectedCountryName);
                 checkCompareRadarPlot();
             }).on("mouseover", function (e, d) {
                 hoverCountry = d3.select(this);
@@ -923,8 +964,8 @@
                 avgCountryAudioFeatures[k] = Math.round(avgCountryAudioFeatures[k] * 100) / 100
             })
 
-            console.log("user audio", avgUserAudioFeatures)
-            console.log("country audio", avgCountryAudioFeatures)
+            // console.log("user audio", avgUserAudioFeatures)
+            // console.log("country audio", avgCountryAudioFeatures)
 
             drawRadarPlot([avgUserAudioFeatures, avgCountryAudioFeatures], "#compare-radar-plot")
             return [avgUserAudioFeatures, avgCountryAudioFeatures]
@@ -976,13 +1017,13 @@
         }
 
         const checkCompareRadarPlot = () => {
-            console.log("comparing")
-            console.log("has radar plot", hasUserRadarPlot)
-            console.log("has country ", hasCountryRadarPlot)
+            // console.log("comparing")
+            // console.log("has radar plot", hasUserRadarPlot)
+            // console.log("has country ", hasCountryRadarPlot)
             if (hasUserRadarPlot && hasCountryRadarPlot) {
                 const featureData = drawCompareRadarPlot();
                 drawComparePlotText(featureData[0], featureData[1])
-                console.log("comparing")
+                // console.log("comparing")
             }
         }
 
@@ -992,7 +1033,7 @@
             let radarHeight = radarPlot.attr("height")
             let radialScale = d3.scaleLinear().domain([0, 1]).range([0, 160])
             let ticks = [0.2, 0.4, 0.6, 0.8, 1]
-            let plotColors = ["salmon", "#f037a5"]
+            let plotColors = ["#4000f5", "#f037a5"]
 
             radarPlot.selectAll("circle").data(ticks)
                 .join("circle")
@@ -1122,7 +1163,7 @@
 
             for (let i = 0; i < topTracks.length; i++) {
                 let artistData = await Promise.resolve(fetchArtistData(tracks[i]["artists"][0]["href"]));
-                console.log(artistData)
+                // console.log(artistData)
                 topTracks[i].artist_url = artistData.artist_url;
                 topTracks[i].genres = artistData.genres
             }
@@ -1133,6 +1174,31 @@
             getRecommendedSongs(userAudioFeatures, selectedCountryName)
             drawUnwrapped()
             checkCompareRadarPlot();
+        }
+
+        async function fetchPlaylistImages(songs){
+            var token = '{{access_token}}'
+
+            for(let i = 0; i < songs.length; i++){
+                track_url = songs[i]["url"]
+                index = track_url.lastIndexOf("/") + 1
+                track_id = track_url.substr(index)
+
+                const result = await fetch("https://api.spotify.com/v1/tracks/" + track_id, {
+                    method: "GET", headers: { Authorization: `Bearer ${token}` }
+                }).then(response =>
+                    response.json().then(data => ({
+                        data: data,
+                        status: response.status
+                    })
+                    ).then(res => {
+                        if (res.status != 200) {
+                            return
+                        }
+                        songs[i]["image"] = res.data["album"]["images"][0]["url"]
+                    }));
+            }
+            return songs
         }
 
 
