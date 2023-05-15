@@ -169,7 +169,7 @@
         .unwrapped-element {
             display: flex;
             flex-direction: row;
-            /* justify-content: space-evenly; */
+            align-items: center;
             margin-bottom: 20px;
         }
 
@@ -181,12 +181,12 @@
         #user-top-artists td, #user-top-songs td{
             padding: 0 15px;
             font-family: SpotifyHeader, sans-serif;
-            font-size: 20px;
         }
 
         .summary-td-1 {
-            width: 5%;
+            width: 10%;
             font-weight: bold;
+            font-size: 50px;
         }
 
         .summary-td-2 {
@@ -196,6 +196,7 @@
         .summary-td-3 {
             width: 50%;
             font-weight: 600;
+            font-size: 25px;
         }
 
         #map-explore {
@@ -765,8 +766,8 @@
                 artist = top5ArtistsData[i];
                 song = top5SongsData[i];
 
-                topArtistPanel.innerHTML += `<tr class='unwrapped-element'><td class='summary-td-1'>${i + 1}</td><td class='summary-td-2'><img class='unwrapped-img' src=${artist.artistUrl}></td><td class='summary-td-3'>${artist.artist}</td></tr>`
-                topSongsPanel.innerHTML += `<tr class='unwrapped-element'><td class='summary-td-1'>${i + 1}</td><td class='summary-td-2'><img class='unwrapped-img' src=${song.image_url}></td><td class='summary-td-3'>${song.name}</td></tr>`
+                topArtistPanel.innerHTML += `<tr class='unwrapped-element'><td class='summary-td-1'>#${i + 1}</td><td class='summary-td-2'><img class='unwrapped-img' src=${artist.artistUrl}></td><td class='summary-td-3'>${artist.artist}</td></tr>`
+                topSongsPanel.innerHTML += `<tr class='unwrapped-element'><td class='summary-td-1'>#${i + 1}</td><td class='summary-td-2'><img class='unwrapped-img' src=${song.image_url}></td><td class='summary-td-3'>${song.name}</td></tr>`
             }
         }
 
