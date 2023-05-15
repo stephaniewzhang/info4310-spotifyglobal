@@ -90,8 +90,8 @@
         }
 
         .unwrapped-img {
-            height: 130px;
-            width: 130px;
+            height: 110px;
+            width: 110px;
         }
 
         .unwrapped-element {
@@ -673,6 +673,7 @@
 
             // Get user data
             let genres = []
+            console.log("top tracks checking genres", topTracks)
             topTracks.forEach(t => {
                 for (let genre of t["genres"]) {
                     genres.push(genre)
@@ -922,6 +923,9 @@
                 avgCountryAudioFeatures[k] = Math.round(avgCountryAudioFeatures[k] * 100) / 100
             })
 
+            console.log("user audio", avgUserAudioFeatures)
+            console.log("country audio", avgCountryAudioFeatures)
+
             drawRadarPlot([avgUserAudioFeatures, avgCountryAudioFeatures], "#compare-radar-plot")
             return [avgUserAudioFeatures, avgCountryAudioFeatures]
         }
@@ -972,9 +976,13 @@
         }
 
         const checkCompareRadarPlot = () => {
+            console.log("comparing")
+            console.log("has radar plot", hasUserRadarPlot)
+            console.log("has country ", hasCountryRadarPlot)
             if (hasUserRadarPlot && hasCountryRadarPlot) {
                 const featureData = drawCompareRadarPlot();
                 drawComparePlotText(featureData[0], featureData[1])
+                console.log("comparing")
             }
         }
 
@@ -1067,6 +1075,22 @@
             document.getElementById("map-explore").scrollIntoView({ behavior: "smooth" });
         }
 
+        const fetchArtistData = async (artist_url) => {
+            token = '{{access_token}}'
+            let artistData
+            await fetch(artist_url, {
+                method: "GET", headers: { Authorization: `Bearer ${token}` }
+            }).then(response => 
+                response.json().then(data => ({
+                    data: data, 
+                    status: response.status
+                })
+                ).then(res => {
+                    artistData = { artist_url: res.data["images"][0]["url"], genres: res.data["genres"] }
+                }))
+            return artistData
+        }
+
         async function fetchUserTopSongs() {
             term = this.value
             token = '{{access_token}}'
@@ -1088,12 +1112,20 @@
                     if (res.status != 200) {
                         return
                     }
+                    
                     tracks = res.data["items"]
                     topTracks = []
                     for (let i = 0; i < tracks.length; i++) {
-                        topTracks.push({ "id": tracks[i]["id"], "name": tracks[i]["name"], "url": tracks[i]["external_urls"]["spotify"], "popularity": tracks[i]["popularity"], "image_url": tracks[i]["image_url"], "artist": tracks[i]["artist"], "artist_url": tracks[i]["artist_url"] })
+                        topTracks.push({ "id": tracks[i]["id"], "name": tracks[i]["name"], "url": tracks[i]["external_urls"]["spotify"], "popularity": tracks[i]["popularity"], "image_url": tracks[i]["album"]["images"][0]["url"], "artist": tracks[i]["artists"][0]["name"], "artist_data_href": tracks[i]["artists"][0]["href"] })
                     }
                 }));
+
+            for (let i = 0; i < topTracks.length; i++) {
+                let artistData = await Promise.resolve(fetchArtistData(tracks[i]["artists"][0]["href"]));
+                console.log(artistData)
+                topTracks[i].artist_url = artistData.artist_url;
+                topTracks[i].genres = artistData.genres
+            }
 
             const res = await Promise.resolve(fetchTopTracksAudio(topTracks))
             userAudioFeatures = res
