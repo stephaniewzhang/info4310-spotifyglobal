@@ -144,6 +144,58 @@
 
         #user-summary {
             background-color: #A5E9B2;
+            display: flex;
+            flex-direction: column;
+            padding: 70px;
+            font-size: 20px;
+        }
+
+        #user-summary h1 {
+            font-family: SpotifyHeader, sans-serif;
+            font-size: 50px;
+        }
+
+        #summary-artist-song-container {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-evenly;
+        }
+
+        .unwrapped-img {
+            height: 130px;
+            width: 130px;
+        }
+
+        .unwrapped-element {
+            display: flex;
+            flex-direction: row;
+            /* justify-content: space-evenly; */
+            margin-bottom: 20px;
+        }
+
+        #user-top-artists, #user-top-songs {
+            width: 100%;
+            table-layout: fixed;
+        }
+
+        #user-top-artists td, #user-top-songs td{
+            padding: 0 15px;
+            font-family: SpotifyHeader, sans-serif;
+            font-size: 20px;
+        }
+
+        .summary-td-1 {
+            width: 5%;
+            font-weight: bold;
+        }
+
+        .summary-td-2 {
+            width: 20%;
+        }
+
+        .summary-td-3 {
+            width: 50%;
+            font-weight: 600;
         }
 
         #map-explore {
@@ -437,9 +489,17 @@
         <img id="spotify-world-img" src="images/spotify-world.png" />
     </div>
     <div id="user-summary">
-        <div id="user-top-artists"></div>
-        <div id="user-top-songs"></div>
-        
+        <div id="user-text-introduction"></div>
+        <div id="summary-artist-song-container">
+            <div>
+                <h2>Your Top Artists</h2>
+                <table id="user-top-artists"></table>
+            </div>
+            <div>
+                <h2>Your Top Songs</h2>
+                <table id="user-top-songs"></table>
+            </div>
+        </div>
     </div>
     <div id="map-explore">
         <h3 id="map-header">Hover to learn more about a country.</h3>
@@ -560,9 +620,9 @@
         }
 
         try {
-            artists = JSON.parse('{{track["artists"]|tojson|safe}}')
+            artists = JSON.parse('{{track["artist"]|tojson|safe}}')
         } catch (e) {
-            artists = JSON.parse('{{track["artists"]|tojson|safe}}')
+            artists = JSON.parse('{{track["artist"]|tojson|safe}}')
         }
 
         try {
@@ -577,7 +637,7 @@
             artist_url = JSON.parse('{{track["artist_url"]|tojson|safe}}')
         }
 
-        topTracks.push({ "id": id, "name": name, "url": url, "popularity": popularity , "image_url": image_url, "genres": genres, "artists": artists, "artist_url": artist_url })
+        topTracks.push({ "id": id, "name": name, "url": url, "popularity": popularity , "image_url": image_url, "genres": genres, "artist": artists, "artist_url": artist_url })
         '{% endfor %}'
 
         try {
@@ -640,6 +700,7 @@
                     if (value != null) {
                         userAudioFeatures = value;
                         drawUserRadarPlot();
+                        drawUnwrapped();
                         // checkCompareRadarPlot();
                     }
                 })
@@ -649,17 +710,64 @@
         d3.selectAll(".timeFilter").on("click", fetchUserTopSongs);
 
         const drawUnwrapped = () => {
-            const panel = document.getElementById('top-songs-panel')
+            let userIntroPanel = document.getElementById('user-text-introduction')
+            userIntroPanel.innerHTML = "";
+            let topArtistPanel = document.getElementById('user-top-artists')
+            topArtistPanel.innerHTML = "";
+            let topSongsPanel = document.getElementById('user-top-songs')
+            topSongsPanel.innerHTML = "";
 
-for (let i = 0; i < 10; i++) {
-    let rank = relevantSongs[i].rank
-    let title = relevantSongs[i].title
-    let artist = relevantSongs[i].artist
+            // Get user data
+            let genres = []
+            topTracks.forEach(t => {
+                for (let genre of t["genres"]) {
+                    genres.push(genre)
+                }
+            })
+            genres = [...new Set(genres)]
+            const genreText = `${genres.slice(0, genres.length - 1).join(", ")}, and ${genres[genres.length - 1]}`
 
-    panel.innerHTML += "<div class='top-song'><p>#" + rank + "</p><p>" + title + "</p><p>" + artist + "</p></div>"
+            // Get Artist Data 
+            const artistMap = {}; // maps the artist to number of occurrences
+            topTracks.forEach(t => {
+                if (artistMap.hasOwnProperty([t["artist"], t["artist_url"]])) {
+                    artistMap[[t["artist"], t["artist_url"]]] += 1
+                } else {
+                    artistMap[[t["artist"], t["artist_url"]]] = 1
+                }
+            })
+            var artistMapSorted = Object.keys(artistMap).map(function(key) {
+                return [key, artistMap[key]];
+            });
+            artistMapSorted.sort(function(first, second) {
+                return second[1] - first[1];
+            });
+            const top5Artists = artistMapSorted.slice(0, 5);
+            const top5ArtistsData = top5Artists.map(d => {
+                let index = d[0].indexOf(",https", 0)
+                let artist = d[0].slice(0, index)
+                let artistUrl = d[0].slice(index + 1)
+                return {
+                    "artist": artist, 
+                    "artistUrl": artistUrl
+                }
+            })
 
-}
-document.getElementById("top-songs-panel").style.display = "block";
+            // Get Song Data 
+            const top5SongsData = topTracks.slice(0, 5);
+
+            userIntroPanel.innerHTML += `<h1> Hello ${userName}</h1>`
+            userIntroPanel.innerHTML += `<p>Recently, you've been listening to a lot of ${genreText}</p>`
+
+            console.log(top5ArtistsData)
+            console.log(top5SongsData)
+            for (let i = 0; i < 5; i++) {
+                artist = top5ArtistsData[i];
+                song = top5SongsData[i];
+
+                topArtistPanel.innerHTML += `<tr class='unwrapped-element'><td class='summary-td-1'>${i + 1}</td><td class='summary-td-2'><img class='unwrapped-img' src=${artist.artistUrl}></td><td class='summary-td-3'>${artist.artist}</td></tr>`
+                topSongsPanel.innerHTML += `<tr class='unwrapped-element'><td class='summary-td-1'>${i + 1}</td><td class='summary-td-2'><img class='unwrapped-img' src=${song.image_url}></td><td class='summary-td-3'>${song.name}</td></tr>`
+            }
         }
 
         const drawWorldMap = async () => {
@@ -1031,7 +1139,7 @@ document.getElementById("top-songs-panel").style.display = "block";
                     tracks = res.data["items"]
                     topTracks = []
                     for (let i = 0; i < tracks.length; i++) {
-                        topTracks.push({ "id": tracks[i]["id"], "name": tracks[i]["name"], "url": tracks[i]["external_urls"]["spotify"], "popularity": tracks[i]["popularity"], "image_url": tracks[i]["image_url"], "artists": tracks[i]["artists"], "artist_url": tracks[i]["artist_url"] })
+                        topTracks.push({ "id": tracks[i]["id"], "name": tracks[i]["name"], "url": tracks[i]["external_urls"]["spotify"], "popularity": tracks[i]["popularity"], "image_url": tracks[i]["image_url"], "artist": tracks[i]["artist"], "artist_url": tracks[i]["artist_url"] })
                     }
                 }));
 

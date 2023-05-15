@@ -75,7 +75,7 @@ def callback():
             print("bearer", access_token)
             params = {
                 "time_range": "short_term",
-                "limit": 50,
+                "limit": 5, # todo - change back to 50 before submission
                 "offset": 0
             }
 
@@ -96,7 +96,7 @@ def callback():
                         "url": track["external_urls"]["spotify"],
                         "popularity": track["popularity"],
                         "image_url": track["album"]["images"][0]["url"], 
-                        "artists": [a["name"] for a in track["artists"]],
+                        "artist": track["artists"][0]["name"],
                         "genres": artist_data["genres"],
                         "artist_url": artist_data["images"][0]["url"]
                     }
