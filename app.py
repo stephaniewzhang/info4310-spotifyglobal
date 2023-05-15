@@ -75,7 +75,7 @@ def callback():
             print("bearer", access_token)
             params = {
                 "time_range": "short_term",
-                "limit": 5, # todo - change back to 50 before submission
+                "limit": 50, 
                 "offset": 0
             }
 
