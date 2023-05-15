@@ -26,15 +26,54 @@
         }
 
         /* my new styling */
+
+        #button-row {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: row;
+            justify-content: space-evenly;
+            width: 40vw;
+        }
+
+        #button-row button {
+            display: inline-block;
+            outline: none;
+            cursor: pointer;
+            font-size: 14px;
+            line-height: 1;
+            border-radius: 500px;
+            transition-property: background-color, border-color, color, box-shadow, filter;
+            transition-duration: .3s;
+            border: 1px solid transparent;
+            letter-spacing: 2px;
+            min-width: 160px;
+            text-transform: uppercase;
+            white-space: normal;
+            font-weight: 700;
+            text-align: center;
+            padding: 16px 14px 18px;
+            color: #616467;
+            box-shadow: inset 0 0 0 2px #616467;
+            background-color: white;
+            height: 48px;
+        }
+
+        #button-row button:hover {
+            color: #fff;
+            background-color: #616467;
+        }
+
         #explanation,
-        #user-summary, 
+        #user-summary,
         #map-explore,
         #world-playlist {
             height: 100vh;
             font-family: spotifyNormal, sans-serif;
         }
 
-        #spider-plots{
+        #spider-plots {
             height: 120vh;
             font-family: spotifyNormal, sans-serif;
         }
@@ -105,12 +144,16 @@
             margin-bottom: 20px;
         }
 
-        #user-top-artists, #user-top-songs, #playlist-songs {
+        #user-top-artists,
+        #user-top-songs,
+        #playlist-songs {
             width: 100%;
             table-layout: fixed;
         }
 
-        #user-top-artists td, #user-top-songs, #playlist-songs td{
+        #user-top-artists td,
+        #user-top-songs,
+        #playlist-songs td {
             padding: 0 15px;
             font-family: SpotifyHeader, sans-serif;
         }
@@ -252,7 +295,8 @@
             align-items: center;
         }
 
-        #user-radar-plot, #country-radar-plot {
+        #user-radar-plot,
+        #country-radar-plot {
             margin-top: -50px;
         }
 
@@ -266,36 +310,6 @@
         #spider-plots #row-2 {
             display: flex;
             justify-content: center;
-        }
-
-        #spider-plots #row-2 button {
-            display: inline-block;
-            outline: none;
-            cursor: pointer;
-            font-size: 14px;
-            line-height: 1;
-            border-radius: 500px;
-            transition-property: background-color, border-color, color, box-shadow, filter;
-            transition-duration: .3s;
-            border: 1px solid transparent;
-            letter-spacing: 2px;
-            min-width: 160px;
-            text-transform: uppercase;
-            white-space: normal;
-            font-weight: 700;
-            text-align: center;
-            padding: 16px 14px 18px;
-            margin-left: 20px;
-            margin-right: 20px;
-            color: #616467;
-            box-shadow: inset 0 0 0 2px #616467;
-            background-color: transparent;
-            height: 48px;
-        }
-
-        #spider-plots #row-2 button:hover {
-            color: #fff;
-            background-color: #616467;
         }
 
         #radar-plot-container {
@@ -321,40 +335,6 @@
         #world-playlist #row-1 h1 {
             font-family: SpotifyHeader;
             font-size: 75px;
-        }
-
-        #world-playlist #row-1 #button-row {
-            display: flex;
-            flex-direction: row;
-            justify-content: space-evenly;
-        }
-
-        #world-playlist #row-1 #button-row button {
-            display: inline-block;
-            outline: none;
-            cursor: pointer;
-            font-size: 14px;
-            line-height: 1;
-            border-radius: 500px;
-            transition-property: background-color, border-color, color, box-shadow, filter;
-            transition-duration: .3s;
-            border: 1px solid transparent;
-            letter-spacing: 2px;
-            min-width: 160px;
-            text-transform: uppercase;
-            white-space: normal;
-            font-weight: 700;
-            text-align: center;
-            padding: 16px 14px 18px;
-            color: #616467;
-            box-shadow: inset 0 0 0 2px #616467;
-            background-color: white;
-            height: 48px;
-        }
-
-        #world-playlist #row-1 #button-row button:hover {
-            color: #fff;
-            background-color: #616467;
         }
 
         #world-playlist button#restart {
@@ -407,6 +387,7 @@
             width: 10%;
             color: white;
         }
+
         .playlist-td-5 {
             width: 10%;
             color: white;
@@ -434,6 +415,7 @@
             font-weight: bold;
             font-size: 25;
         }
+
         .playlist-th-5 {
             width: 10%;
             color: white;
@@ -444,6 +426,11 @@
 </head>
 
 <body>
+    <div id="button-row">
+        <button class="timeFilter" name="4 Weeks" type="submit" value="short_term">4 weeks</button>
+        <button class="timeFilter" name="6 Months" type="submit" value="medium_term">6 months</button>
+        <button class="timeFilter" name="All-Time" type="submit" value="long_term">All-Time</button>
+    </div>
     <div id="explanation">
         <h1>Welcome to Spotify Global!</h1>
         <p>While many Spotify analysis tools already exist, a minimal amount of them give insight that expands beyond
@@ -529,21 +516,11 @@
                 <svg id="compare-text" height="300" width="400"></svg>
             </div>
         </div>
-        <div id="row-2">
-            <button class="timeFilter" name="4 Weeks" type="submit" value="short_term">4 weeks</button>
-            <button class="timeFilter" name="6 Months" type="submit" value="medium_term">6 months</button>
-            <button class="timeFilter" name="All-Time" type="submit" value="long_term">All-Time</button>
-        </div>
     </div>
     <div id="world-playlist">
         <div id="row-1">
             <img src="static/images/Spotify_logo_without_text.svg" alt="logo without text" />
             <div id="right-col">
-                <div id="button-row">
-                    <button class="timeFilter" name="4 Weeks" type="submit" value="short_term">4 weeks</button>
-                    <button class="timeFilter" name="6 Months" type="submit" value="medium_term">6 months</button>
-                    <button class="timeFilter" name="All-Time" type="submit" value="long_term">All-Time</button>
-                </div>
                 <h1><span id="country-name">*Country*</span> Playlist For You</h1>
             </div>
         </div>
@@ -625,14 +602,14 @@
         } catch (e) {
             genres = JSON.parse('{{track["genres"]|tojson|safe}}')
         }
-        
+
         try {
             artist_url = JSON.parse('{{track["artist_url"]|tojson|safe}}')
         } catch (e) {
             artist_url = JSON.parse('{{track["artist_url"]|tojson|safe}}')
         }
 
-        topTracks.push({ "id": id, "name": name, "url": url, "popularity": popularity , "image_url": image_url, "genres": genres, "artist": artists, "artist_url": artist_url })
+        topTracks.push({ "id": id, "name": name, "url": url, "popularity": popularity, "image_url": image_url, "genres": genres, "artist": artists, "artist_url": artist_url })
         '{% endfor %}'
 
         try {
@@ -644,14 +621,14 @@
 
         console.log(userName)
         console.log("topTracks", topTracks)
- 
-        async function getRecommendedSongs(userAudioFeatures, selectedCountry){
+
+        async function getRecommendedSongs(userAudioFeatures, selectedCountry) {
             let recommendations = []
             let averageAudioFeatures = getUserAvgAudioFeatures(userAudioFeatures)
             // For each viral song of selectedCountry, calculate difference between user and song
             differences = []
             songs = countrySongMap[selectedCountry]
-            for(let i = 0; i < songs.length; i++){
+            for (let i = 0; i < songs.length; i++) {
                 total = 0
                 total += Math.pow(averageAudioFeatures["danceability"] - songs[i]["danceability"], 2)
                 total += Math.pow(averageAudioFeatures["energy"] - songs[i]["energy"], 2)
@@ -664,7 +641,7 @@
             }
             differences = differences.sort((a, b) => a[0] - b[0])
             // Get top 5 songs 
-            for(let j = 0; j < 5; j++){
+            for (let j = 0; j < 5; j++) {
                 song = songs[differences[j][1]]
                 song["similarity"] = Math.round((1 - differences[j][0]) * 10000) / 100
                 recommendations.push(song)
@@ -682,10 +659,10 @@
                 song = recommendations[i];
                 playlist.innerHTML += `<tr><td class='playlist-td-1'>#${i + 1}</td><td class='playlist-td-2'><img class='unwrapped-img' src=${song.image}></td><td class='playlist-td-3'>${song.title}</td><td class='playlist-td-4'>${song.artist}</td><td class='playlist-td-5'>${song.similarity}%</td></tr>`
             }
-            
+
             document.getElementById("country-name").innerText = selectedCountry
         }
-        
+
         for (let i = 0; i < topTracks.length; i++) {
             if (topTracks[i]["url"].substring(0, 5) != "https") {
                 break
@@ -732,10 +709,10 @@
                     artistMap[[t["artist"], t["artist_url"]]] = 1
                 }
             })
-            var artistMapSorted = Object.keys(artistMap).map(function(key) {
+            var artistMapSorted = Object.keys(artistMap).map(function (key) {
                 return [key, artistMap[key]];
             });
-            artistMapSorted.sort(function(first, second) {
+            artistMapSorted.sort(function (first, second) {
                 return second[1] - first[1];
             });
             const top5Artists = artistMapSorted.slice(0, 5);
@@ -744,7 +721,7 @@
                 let artist = d[0].slice(0, index)
                 let artistUrl = d[0].slice(index + 1)
                 return {
-                    "artist": artist, 
+                    "artist": artist,
                     "artistUrl": artistUrl
                 }
             })
@@ -910,7 +887,7 @@
             drawRadarPlot([], "#country-radar-plot", [])
         }
 
-        function getUserAvgAudioFeatures(userAudioFeatures){
+        function getUserAvgAudioFeatures(userAudioFeatures) {
             const avgUserAudioFeatures = {}
             userAudioFeaturesArray = userAudioFeatures.map(d => Object.values(d)[0])
             radarFeatures.forEach(k => {
@@ -1121,9 +1098,9 @@
             let artistData
             await fetch(artist_url, {
                 method: "GET", headers: { Authorization: `Bearer ${token}` }
-            }).then(response => 
+            }).then(response =>
                 response.json().then(data => ({
-                    data: data, 
+                    data: data,
                     status: response.status
                 })
                 ).then(res => {
@@ -1153,7 +1130,7 @@
                     if (res.status != 200) {
                         return
                     }
-                    
+
                     tracks = res.data["items"]
                     topTracks = []
                     for (let i = 0; i < tracks.length; i++) {
@@ -1176,10 +1153,10 @@
             checkCompareRadarPlot();
         }
 
-        async function fetchPlaylistImages(songs){
+        async function fetchPlaylistImages(songs) {
             var token = '{{access_token}}'
 
-            for(let i = 0; i < songs.length; i++){
+            for (let i = 0; i < songs.length; i++) {
                 track_url = songs[i]["url"]
                 index = track_url.lastIndexOf("/") + 1
                 track_id = track_url.substr(index)
