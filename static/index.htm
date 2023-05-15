@@ -303,6 +303,7 @@
 
         #spider-plots #row-1 {
             display: flex;
+            flex-direction: column;
         }
 
         #spider-plots #row-1 h1 {
@@ -314,11 +315,20 @@
         #spider-plots #row-1 #country-plot {
             margin: 25px;
             flex-grow: 4;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #user-radar-plot, #country-radar-plot {
+            margin-top: -50px;
         }
 
         #spider-plots #row-1 #comparison {
             flex-shrink: -2;
-
+            margin-top: -200px;
+            align-self: center;
+            margin-left: 25px;
         }
 
         #spider-plots #row-2 {
@@ -354,6 +364,11 @@
         #spider-plots #row-2 button:hover {
             color: #fff;
             background-color: #616467;
+        }
+
+        #radar-plot-container {
+            display: flex;
+            flex-direction: row;
         }
 
         #world-playlist {
@@ -524,15 +539,18 @@
     <div id="spider-plots">
         <h1 id="selected"></h1>
         <div id="row-1">
-            <div id="you-plot">
-                <h1>You</h1>
-                <svg id="user-radar-plot" height="500" width="500"></svg>
-            </div>
-            <div id="country-plot">
-                <h1 id="country-label">Select A Country</h1>
-                <svg id="country-radar-plot" height="500" width="500"></svg>
+            <div id="radar-plot-container">
+                <div id="you-plot">
+                    <h1>You</h1>
+                    <svg id="user-radar-plot" height="550" width="550"></svg>
+                </div>
+                <div id="country-plot">
+                    <h1 id="country-label">Select A Country</h1>
+                    <svg id="country-radar-plot" height="550" width="550"></svg>
+                </div>
             </div>
             <div id="comparison">
+                <svg id="compare-radar-plot" height="550" width="550"></svg>
                 <svg id="compare-text" height="300" width="400"></svg>
             </div>
         </div>
@@ -702,7 +720,7 @@
                         userAudioFeatures = value;
                         drawUserRadarPlot();
                         drawUnwrapped();
-                        // checkCompareRadarPlot();
+                        checkCompareRadarPlot();
                     }
                 })
             })();
@@ -760,8 +778,6 @@
             userIntroPanel.innerHTML += `<h1> Hello ${userName}</h1>`
             userIntroPanel.innerHTML += `<p>Recently, you've been listening to a lot of ${genreText}</p>`
 
-            console.log(top5ArtistsData)
-            console.log(top5SongsData)
             for (let i = 0; i < 5; i++) {
                 artist = top5ArtistsData[i];
                 song = top5SongsData[i];
@@ -878,7 +894,7 @@
                 relevantSongs = getRelevantSongs();
                 drawCountryRadarPlot(relevantSongs, selectedCountryName);
                 getRecommendedSongs(userAudioFeatures, selectedCountryName)
-                //checkCompareRadarPlot();
+                checkCompareRadarPlot();
             }).on("mouseover", function (e, d) {
                 hoverCountry = d3.select(this);
                 hoverCountryData = d;
@@ -1149,7 +1165,7 @@
             drawUserRadarPlot();
             getRecommendedSongs(userAudioFeatures, selectedCountryName)
             drawUnwrapped()
-            // checkCompareRadarPlot();
+            checkCompareRadarPlot();
         }
 
 
