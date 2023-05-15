@@ -1,0 +1,118 @@
+<html>
+    <head>
+        <title>INFO4310 - Spotify Global</title>
+        <meta charset="UTF-8">
+        <script src="https://d3js.org/d3.v7.min.js"></script>
+        <script src="https://d3js.org/topojson.v2.min.js"></script>
+        <style>
+            @font-face {
+                font-family: spotifyHeader;
+                src: url("fonts/Gotham-Bold.otf");
+            }
+    
+            @font-face {
+                font-family: spotifyNormal;
+                src: url("fonts/Gotham-Light.otf");
+            }
+    
+            #gmap {
+                width: 1600;
+                height: 2000;
+            }
+    
+            body {
+                background-color: white;
+            }
+    
+            /* my new styling */
+            #starter-page {
+                height: 100vh;
+                font-family: spotifyNormal, sans-serif;
+            }
+    
+            #starter-page #row-1 {
+                padding-top: 80px;
+                padding-left: 100px;
+            }
+    
+            #starter-page h1 {
+                margin: 0;
+                font-family: spotifyHeader, sans-serif;
+                font-size: 75px;
+    
+            }
+    
+            #starter-page p {
+                margin-top: 40px;
+    
+            }
+    
+            #starter-page #logo {
+                height: 1.5em;
+                position: relative;
+                top: 28px;
+            }
+    
+            #starter-page h2 {
+                font-size: 40px;
+            }
+    
+            #starter-page #row-2 {
+                position: relative;
+                padding-left: 100px;
+                padding-right: 100px;
+            }
+    
+            #starter-page button {
+                position: absolute;
+                top: 0;
+                display: inline-block;
+                outline: none;
+                cursor: pointer;
+                font-size: 14px;
+                line-height: 1;
+                border-radius: 500px;
+                transition-property: background-color, border-color, color, box-shadow, filter;
+                transition-duration: .3s;
+                border: 1px solid transparent;
+                letter-spacing: 2px;
+                min-width: 160px;
+                text-transform: uppercase;
+                white-space: normal;
+                font-weight: 700;
+                text-align: center;
+                padding: 17px 48px;
+                background-color: #1ED760;
+                height: 48px;
+            }
+    
+            #starter-page button:hover {
+                background-color: #21e065;
+            }
+    
+            #starter-page button a {
+                color: white;
+                text-decoration: none;
+            }
+    
+            #starter-page #world-map-photo {
+                position: absolute;
+                right: 100px;
+                width: 800px;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="starter-page">
+            <div id="row-1">
+                <h1 id="title"><img id="logo" src="images/spotify_logo.svg" alt="Spotify logo" />Global</h1>
+                <p>Amy Huang (ach243), Jonna Chen (jc2627), Kate Liang (ksl67), Stephanie Zhang (swz8)</p>
+                <h2 id="text">Discover your new favorite music, worldwide.</h2>
+            </div>
+            <div id="row-2">
+                <button><a href="/login">Login with Spotify</a></button>
+                <img id="world-map-photo" src="images/world-map.png" alt="world map" />
+            </div>
+        </div>
+    </body>
+</html>

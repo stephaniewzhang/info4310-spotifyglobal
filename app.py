@@ -14,7 +14,7 @@ app = Flask(__name__, template_folder="static/")
 app.wsgi_app = WhiteNoise(app.wsgi_app, 
                           root='static/', 
                           prefix='', 
-                          index_file='index.htm', 
+                          index_file='login.htm', 
                           autorefresh=True)
 
 

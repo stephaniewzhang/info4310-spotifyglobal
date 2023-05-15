@@ -26,7 +26,6 @@
         }
 
         /* my new styling */
-        #starter-page,
         #explanation,
         #user-summary, 
         #map-explore,
@@ -34,77 +33,6 @@
         #world-playlist {
             height: 100vh;
             font-family: spotifyNormal, sans-serif;
-        }
-
-        #starter-page #row-1 {
-            padding-top: 80px;
-            padding-left: 100px;
-        }
-
-        #starter-page h1 {
-            margin: 0;
-            font-family: spotifyHeader, sans-serif;
-            font-size: 75px;
-
-        }
-
-        #starter-page p {
-            margin-top: 40px;
-
-        }
-
-        #starter-page #logo {
-            height: 1.5em;
-            position: relative;
-            top: 28px;
-        }
-
-        #starter-page h2 {
-            font-size: 40px;
-        }
-
-        #starter-page #row-2 {
-            position: relative;
-            padding-left: 100px;
-            padding-right: 100px;
-        }
-
-        #starter-page button {
-            position: absolute;
-            top: 0;
-            display: inline-block;
-            outline: none;
-            cursor: pointer;
-            font-size: 14px;
-            line-height: 1;
-            border-radius: 500px;
-            transition-property: background-color, border-color, color, box-shadow, filter;
-            transition-duration: .3s;
-            border: 1px solid transparent;
-            letter-spacing: 2px;
-            min-width: 160px;
-            text-transform: uppercase;
-            white-space: normal;
-            font-weight: 700;
-            text-align: center;
-            padding: 17px 48px;
-            background-color: #1ED760;
-            height: 48px;
-        }
-
-        #starter-page button:hover {
-            background-color: #21e065;
-        }
-
-        #starter-page button a {
-            color: white;
-            text-decoration: none;
-        }
-
-        #starter-page #world-map-photo {
-            position: absolute;
-            right: 100px;
-            width: 800px;
         }
 
         #explanation {
@@ -455,17 +383,6 @@
 </head>
 
 <body>
-    <div id="starter-page">
-        <div id="row-1">
-            <h1 id="title"><img id="logo" src="images/spotify_logo.svg" alt="Spotify logo" />Global</h1>
-            <p>Amy Huang (ach243), Jonna Chen (jc2627), Kate Liang (ksl67), Stephanie Zhang (swz8)</p>
-            <h2 id="text">Discover your new favorite music, worldwide.</h2>
-        </div>
-        <div id="row-2">
-            <button><a href="/login">Login with Spotify</a></button>
-            <img id="world-map-photo" src="images/world-map.png" alt="world map" />
-        </div>
-    </div>
     <div id="explanation">
         <h1>Welcome to Spotify Global!</h1>
         <p>While many Spotify analysis tools already exist, a minimal amount of them give insight that expands beyond
@@ -532,9 +449,6 @@
                 </div>
             </div>
         </div>
-        <div id="world-playlist">
-
-        </div>
     </div>
     <div id="spider-plots">
         <h1 id="selected"></h1>
@@ -573,7 +487,6 @@
             </div>
         </div>
         <div id="playlist-songs">
-            all songs here
         </div>
         <button id="restart" onclick="scrollBackToMap()">Go back to country select</button>
     </div>
@@ -690,7 +603,7 @@
             // Get top 5 songs 
             for(let j = 0; j < 5; j++){
                 song = songs[differences[j][1]]
-                song["similarity"] = (1 - differences[j][0])*100
+                song["similarity"] = Math.round((1 - differences[j][0]) * 10000) / 100
                 recommendations.push(song)
             }
             // Return sorted list based on smallest difference
@@ -701,12 +614,34 @@
             document.getElementById("country-name").innerText = selectedCountry
             document.getElementById("playlist-songs").innerText = ""
 
-            text = ""
-            for(let i = 0; i < recommendations.length; i++){
-                text += recommendations[i]["title"] + "\n"
-            }
+            var table = d3.select("#playlist-songs").append("table")
+            columns = ["title", "artist", "similarity"]
+            thead = table.append("thead"),
+            tbody = table.append("tbody");
 
-            document.getElementById("playlist-songs").innerText = text
+            thead.append("tr")
+                .selectAll("th")
+                .data(columns)
+                .enter()
+                .append("th")
+                    .text(function(column) { return column; })
+                    .style('color', 'white')
+
+            var rows = tbody.selectAll("tr")
+                    .data(recommendations)
+                    .enter()
+                    .append("tr");
+
+            var cells = rows.selectAll("td")
+                            .data(function(row) {
+                                return columns.map(function(column) {
+                                    return {column: column, value: row[column]};
+                                });
+                            })
+                            .enter()
+                            .append("td")
+                            .style('color', 'white')
+                            .html(function(d) { return d.value; });
         }
         
         for (let i = 0; i < topTracks.length; i++) {
